@@ -1,0 +1,33 @@
+## --- Visual Studio & .NET Core ---
+# Foldery z wynikami kompilacji (nie chcemy tego w repo)
+[Bb]in/
+[Oo]bj/
+
+# Pliki konfiguracyjne użytkownika Visual Studio (ukryty folder)
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Pliki tymczasowe testów
+TestResults/
+
+# Visual Studio Code (jeśli używasz)
+.vscode/
+
+## --- Kwestie bezpieczeństwa (Bardzo ważne!) ---
+# Ignorujemy pliki, które mogą zawierać hasła do bazy na Twoim komputerze
+appsettings.Development.json
+appsettings.Local.json
+*.local.json
+.env
+
+## --- Systemowe ---
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Mac (jeśli ktoś z zespołu ma Maca)
+.DS_Store
