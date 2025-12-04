@@ -3,6 +3,7 @@ using LedgerCore.Domain.Entities;
 using LedgerCore.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace LedgerCore.Api.Controllers;
 
@@ -89,5 +90,35 @@ public class AccountsController : ControllerBase
 
         return Ok(result);
     }
+
+
+    [HttpGet("{id}/history")]
+    public async Task<IActionResult> GetHistory(Guid id)
+    {
+        // Sprawdzamy, czy konto istnieje
+        var account = await _context.Accounts.FindAsync(id);
+        if (account == null)
+        {
+            return NotFound("Nie znaleziono konta o id " + id); // 404 jeśli nie znaleziono
+        }
+        // Pobieramy historię zapisów księgowych dla tego konta
+        var entries = await _context.JournalEntries
+            .Include(e => e.Transaction)
+            .Where(e => e.AccountId == id)
+            .OrderByDescending(e => e.Transaction.Date)
+            .Select(
+            
+                e => new AccountHistoryDto
+                {
+                    Date = e.Transaction.Date,
+                    Description = e.Transaction.Description,
+                    Amount = e.Amount,
+                    Side = e.Side == Domain.Enums.DebitCredit.Debit ? "Winien" : "Ma"
+                }
+            )
+            .ToListAsync();
+        return Ok(entries);
+    }
+
 
 }

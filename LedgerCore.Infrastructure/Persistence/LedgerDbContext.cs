@@ -25,8 +25,9 @@ public class LedgerDbContext : DbContext
         {
             // Mówimy bazie: Jedna Transakcja ma wiele wpisów (Entries)
             entity.HasMany(t => t.Entries)
-                  .WithOne()
-                  .HasForeignKey(e => e.TransactionId);
+                  .WithOne(j => j.Transaction)
+                  .HasForeignKey(j => j.TransactionId)
+                  .IsRequired();
 
             // 🔥 BARDZO WAŻNE:
             // Mówimy bazie: "Hej, lista 'Entries' w klasie Transaction jest tylko do odczytu.

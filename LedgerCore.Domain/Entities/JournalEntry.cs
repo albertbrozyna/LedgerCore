@@ -1,4 +1,5 @@
 ﻿using LedgerCore.Domain.Enums;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LedgerCore.Domain.Entities;
 
@@ -8,6 +9,8 @@ public class JournalEntry
 
     // RELACJE
     public Guid TransactionId { get; private set; } // Rodzic (Transakcja)
+    [ForeignKey("TransactionId")]
+    public Transaction Transaction { get; private set; } // Nawigacja do transakcji
     public Guid AccountId { get; private set; }     // Konto
     public Account? Account { get; private set; }   // Nawigacja do konta
 
