@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36511.14 d17.14
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11222.15 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LedgerCore.Domain", "LedgerCore.Domain\LedgerCore.Domain.csproj", "{8453F0D1-1885-4498-B831-F2F021CEEC67}"
 EndProject
@@ -15,6 +15,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Elementy rozwiązania", "El
 	ProjectSection(SolutionItems) = preProject
 		docker-comopose.yml = docker-comopose.yml
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LedgerCore.AppHost", "LedgerCore.AppHost\LedgerCore.AppHost.csproj", "{21B7476E-BF51-491C-BC47-6619D7EF9085}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LedgerCore.ServiceDefaults", "LedgerCore.ServiceDefaults\LedgerCore.ServiceDefaults.csproj", "{3D3AB171-05F8-449E-86E7-57937120A31B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,6 +42,14 @@ Global
 		{730E97E5-B59A-4018-87D8-2A893C4F131A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{730E97E5-B59A-4018-87D8-2A893C4F131A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{730E97E5-B59A-4018-87D8-2A893C4F131A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{21B7476E-BF51-491C-BC47-6619D7EF9085}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21B7476E-BF51-491C-BC47-6619D7EF9085}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21B7476E-BF51-491C-BC47-6619D7EF9085}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21B7476E-BF51-491C-BC47-6619D7EF9085}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D3AB171-05F8-449E-86E7-57937120A31B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D3AB171-05F8-449E-86E7-57937120A31B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D3AB171-05F8-449E-86E7-57937120A31B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D3AB171-05F8-449E-86E7-57937120A31B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

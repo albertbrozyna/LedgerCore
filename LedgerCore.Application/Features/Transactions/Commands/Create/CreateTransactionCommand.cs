@@ -1,6 +1,35 @@
 ﻿// 1. Główna koperta z danymi transakcji
 using LedgerCore.Api.Dtos;
+using LedgerCore.Application.Common.Interfaces;
+using MediatR;
 using System.ComponentModel.DataAnnotations;
+
+
+public static class CreateTransaction
+{ 
+    public record Command(String description, decimal Amount) : IRequest<Result>;
+    public record Result(Guid TransactionId,String descriptio,decimal Amount);
+
+    public class Handler : IRequestHandler<Command, Result>
+    {
+        IAppDbContext _context;
+
+        public Handler(IAppDbContext context)
+        {
+            _context = context;
+        }
+
+
+        public async Task<Result> Handle(Command request, CancellationToken cancellationToken)
+        {
+            // Logika tworzenia transakcji
+            Guid newTransactionId = Guid.NewGuid();
+
+
+
+
+
+        }
 
 public class CreateTransactionCommand
 {
