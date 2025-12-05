@@ -1,9 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+	  <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Common\" />
+    <Folder Include="Features\Transactions\Commands\Delete\" />
+    <Folder Include="Features\Transactions\Common\" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LedgerCore.Domain\LedgerCore.Domain.csproj" />
+	</ItemGroup>
 
 </Project>
