@@ -1,4 +1,5 @@
 ﻿using LedgerCore.Domain.Enums;
+using LedgerCore.Domain.Exceptions;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LedgerCore.Domain.Entities;
@@ -26,7 +27,7 @@ public class JournalEntry
     // Twój konstruktor
     public JournalEntry(Guid accountId, decimal amount, DebitCredit side)
     {
-        if (amount <= 0) throw new ArgumentException("Kwota zapisu musi być dodatnia!");
+        if (amount <= 0) throw new NegativeAmountException(amount);
 
         Id = Guid.NewGuid();
         AccountId = accountId;

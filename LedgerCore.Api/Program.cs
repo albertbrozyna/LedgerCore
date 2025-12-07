@@ -1,11 +1,15 @@
+using Carter;
 using Microsoft.EntityFrameworkCore;
-
+using LedgerCore.Application.Common.Interfaces;
 var builder = WebApplication.CreateBuilder(args);
+
+
+/// Adding carter to project
+builder.Services.AddCarter();
 
 // This program is the main starting point for app
 // Add services to the container.
 
-builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -23,7 +27,16 @@ void DatabaseConfig(DbContextOptionsBuilder options)
 // MÛwimy: "Uøywaj Postgresa i weü has≥o z pliku appsettings.json"
 builder.Services.AddDbContext<LedgerCore.Infrastructure.Persistence.LedgerDbContext>(DatabaseConfig);
 
+// To dodaj koniecznie:
+builder.Services.AddScoped<IAppDbContext>(provider =>provider.GetRequiredService<LedgerCore.Infrastructure.Persistence.LedgerDbContext>());
+
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(LedgerCore.Application.Common.Interfaces.IAppDbContext).Assembly));
+
 var app = builder.Build();
+
+// Map endpoints from Carter modules
+app.MapCarter();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -38,8 +51,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
+//app.UseAuthorization();
 
-app.MapControllers();
 
 app.Run();

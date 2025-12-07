@@ -1,4 +1,5 @@
 ﻿using LedgerCore.Domain.Enums;
+using LedgerCore.Domain.Exceptions;
 
 namespace LedgerCore.Domain.Entities;
 
@@ -28,9 +29,9 @@ public class Transaction
         Date = date;
     }
 
-    public void AddEntry(Account account, decimal amount,DebitCredit side)
+    public void AddEntry(Guid accountId, decimal amount,DebitCredit side)
     {
-        var entry = new JournalEntry(account.Id, amount,side);
+        var entry = new JournalEntry(accountId, amount,side);
 
         entry.AssignToTransaction(this.Id);
 
@@ -50,7 +51,7 @@ public class Transaction
     
         if (creditSum != debtSum)
         {
-            throw new InvalidOperationException($"Transakcja niezbilansowana! Winien ${debtSum} Ma: ${creditSum}");
+            throw new UnbalancedTransactionException(debtSum,creditSum);
         }
     }
 

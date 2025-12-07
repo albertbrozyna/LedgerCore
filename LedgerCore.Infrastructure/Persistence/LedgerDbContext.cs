@@ -1,10 +1,11 @@
 ﻿using LedgerCore.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
+using LedgerCore.Application.Common.Interfaces;
 namespace LedgerCore.Infrastructure.Persistence;
 
 // 1. Dziedziczymy po DbContext (klasie od Microsoftu)
-public class LedgerDbContext : DbContext
+public class LedgerDbContext : DbContext, IAppDbContext
 {
     // 2. Konstruktor - przyjmuje opcje (np. "połącz z Postgres") i przekazuje je wyżej
     public LedgerDbContext(DbContextOptions<LedgerDbContext> options) : base(options)
