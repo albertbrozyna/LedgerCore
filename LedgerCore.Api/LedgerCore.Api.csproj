@@ -19,7 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\LedgerCore.Application\LedgerCore.Application.csproj" />
     <ProjectReference Include="..\LedgerCore.Domain\LedgerCore.Domain.csproj" />
-    <ProjectReference Include="..\LedgerCore.Infrastructure\LedgerCore.Infrastructure..csproj" />
+    <ProjectReference Include="..\LedgerCore.Infrastructure\LedgerCore.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

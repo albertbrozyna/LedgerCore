@@ -18,6 +18,8 @@ public class LedgerDbContext : DbContext, IAppDbContext
     public DbSet<Transaction> Transactions { get; set; }
     public DbSet<JournalEntry> JournalEntries { get; set; }
 
+    public DbSet<User> Users { get; set; }
+
     // 4. Konfiguracja "pod maską"
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

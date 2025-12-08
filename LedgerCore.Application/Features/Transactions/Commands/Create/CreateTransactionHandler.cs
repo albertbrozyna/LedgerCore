@@ -27,7 +27,7 @@ public static partial class CreateTransaction
 
 
             var accountIds = request.Entries.Select(e => e.AccountId).Distinct().ToList();
-
+            // Check if account exist in database
             var existingAccounts = await _context.Accounts.Where(a => accountIds.Contains(a.Id))
                 .Select(a => a.Id)
                 .ToListAsync();

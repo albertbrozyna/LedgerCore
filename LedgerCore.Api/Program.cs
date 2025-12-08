@@ -1,6 +1,13 @@
 using Carter;
-using Microsoft.EntityFrameworkCore;
+using FluentValidation;
+using LedgerCore.Api.Infrastructure;
+using LedgerCore.Application.Common.Behaviors;
 using LedgerCore.Application.Common.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using LedgerCore.Infrastructure;
+using LedgerCore.Infrastructure.Persistence;
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 
@@ -11,9 +18,22 @@ builder.Services.AddCarter();
 // Add services to the container.
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
+builder.Services.AddInfrastructure();
+builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails(configure =>
+{
+    configure.CustomizeProblemDetails = options =>
+    {
+        options.ProblemDetails.Extensions.TryAdd("requestId", options.HttpContext.TraceIdentifier); // Add request id to problem details
+    };
+});
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.CustomSchemaIds(type => type.ToString().Replace("+", "."));
+});
 
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -25,18 +45,31 @@ void DatabaseConfig(DbContextOptionsBuilder options)
 
 // Rejestrujemy bazê danych w systemie.
 // Mówimy: "U¿ywaj Postgresa i weŸ has³o z pliku appsettings.json"
-builder.Services.AddDbContext<LedgerCore.Infrastructure.Persistence.LedgerDbContext>(DatabaseConfig);
+builder.Services.AddDbContext<LedgerDbContext>(DatabaseConfig);
 
 // To dodaj koniecznie:
-builder.Services.AddScoped<IAppDbContext>(provider =>provider.GetRequiredService<LedgerCore.Infrastructure.Persistence.LedgerDbContext>());
+builder.Services.AddScoped<IAppDbContext>(provider => provider.GetRequiredService<LedgerDbContext>());
+
+
+// 1. Rejestracja FluentValidation
+// Skanuje projekt Application i znajduje wszystkie klasy dziedzicz¹ce po AbstractValidator
+builder.Services.AddValidatorsFromAssembly(typeof(LedgerCore.Application.Common.Interfaces.IAppDbContext).Assembly);
 
 builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssembly(typeof(LedgerCore.Application.Common.Interfaces.IAppDbContext).Assembly));
+{
+    cfg.RegisterServicesFromAssembly(typeof(LedgerCore.Application.Common.Interfaces.IAppDbContext).Assembly);
+
+    // Dodajemy nasze zachowanie do ruroci¹gu
+    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+}
+
+    );
 
 var app = builder.Build();
 
-// Map endpoints from Carter modules
-app.MapCarter();
+app.UseExceptionHandler();
+
+app.UseHttpsRedirection();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -45,13 +78,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Alternative way to register DbContext
-//builder.Services.AddDbContext<LedgerCore.Infrastructure.Persistence.LedgerDbContext>((options =>
-//    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))));
-
-app.UseHttpsRedirection();
-
-//app.UseAuthorization();
+// Map endpoints from Carter modules
+app.MapCarter();
 
 
-app.Run();
+
+
+
+await app.RunAsync();
