@@ -9,12 +9,12 @@ namespace LedgerCore.Api.Features.Auth
     {
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPost("api/v1/login",async (Login.Command command, ISender sender) =>
+            app.MapPost("api/v1/auth/login",async (Login.Command command, ISender sender) =>
             {
                 var result = await sender.Send(command);
-                return Results.Ok(result);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
-            .WithTags("Auth")
+            .WithTags("Authentication")
              .WithName("Login")
               .WithSummary("Log in user to system")
               .WithDescription("Log in user to system and...")

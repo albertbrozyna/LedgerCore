@@ -12,7 +12,7 @@ namespace LedgerCore.Application.Features.Accounts.Commands.Create
 
         public class CreateAccountHandler : IRequestHandler<Command, Result>
         {
-            IAppDbContext _context;
+            private readonly IAppDbContext _context;
 
             public CreateAccountHandler(IAppDbContext context)
             {
