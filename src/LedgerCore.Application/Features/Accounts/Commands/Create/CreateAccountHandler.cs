@@ -1,15 +1,12 @@
 ﻿using LedgerCore.Application.Common.Interfaces;
 using LedgerCore.Domain.Entities;
 using MediatR;
-using static LedgerCore.Application.Features.Accounts.Commands.Create.CreateAccount;
 
 namespace LedgerCore.Application.Features.Accounts.Commands.Create
 {
 
     public static partial class CreateAccount
     {
-
-
         public class CreateAccountHandler : IRequestHandler<Command, Result>
         {
             private readonly IAppDbContext _context;

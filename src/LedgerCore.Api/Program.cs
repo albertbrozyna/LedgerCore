@@ -65,7 +65,16 @@ builder.Services.AddMediatR(cfg =>
 
     );
 
+
+
 var app = builder.Build();
+
+// Check if database has started
+using (var scope = app.Services.CreateScope())
+{
+    var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
+    await initializer.InitializeAsync();
+}
 
 app.UseExceptionHandler();
 

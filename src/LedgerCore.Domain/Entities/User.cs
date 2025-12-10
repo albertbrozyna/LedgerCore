@@ -13,6 +13,7 @@ namespace LedgerCore.Domain.Entities
         public string LastName { get; private set; }
         public UserRole Role { get; private set; }
         public bool IsActive { get; private set; }
+        public bool IsDeleted { get; private set; }
         public DateTime CreatedAt { get; private set; }
         public DateTime LastLogin { get; private set; }
         public string? PhoneNumber { get; private set; }
@@ -35,7 +36,7 @@ namespace LedgerCore.Domain.Entities
             Role = role;
             FirstName = firstName;
             LastName = lastName;
-
+            IsDeleted = false;
             if (!validateEmail(email))
             {
                 throw new IncorrectEmailException(email);
@@ -57,5 +58,49 @@ namespace LedgerCore.Domain.Entities
             }
         }
 
+        public void BlockUser()
+        {
+            if (!IsActive)
+            {
+                throw new UserAlreadyBlockedException(Id);
+            }
+
+            IsActive = false;
+        }
+
+        public void UnblockUser()
+        {
+            if (IsActive)
+            {
+                throw new UserNotBlockedException(Id);
+            }
+            IsActive = true;
+        }
+
+        public void SetLastLoginNow()
+        {
+            LastLogin = DateTime.UtcNow;
+            FailedLoginAttempts = 0;
+            LockoutEnd = null;
+        }
+
+        public void AddFailedLoginAttempt(int maxAttempts = 3, int lockoutDurationInMinutes = 15)
+        {
+            FailedLoginAttempts++;
+
+            if (FailedLoginAttempts >= maxAttempts)
+            {
+                LockoutEnd = DateTime.UtcNow.AddMinutes(lockoutDurationInMinutes);
+            }
+        }
+
+        public void DeleteUser()
+        {
+            if (IsDeleted)
+            {
+                throw new UserDeletedException(Id);
+            }
+            IsDeleted = true;
+        }
     }
 }

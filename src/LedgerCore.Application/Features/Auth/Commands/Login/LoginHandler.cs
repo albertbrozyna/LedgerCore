@@ -1,6 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using LedgerCore.Application.Common.Interfaces;
 using LedgerCore.Application.Common.Interfaces.Authentication;
+using LedgerCore.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,11 +24,24 @@ namespace LedgerCore.Application.Features.Auth.Commands.Login
             {
                 var userOrNull = await _appDbContext.Users.FirstOrDefaultAsync(u => u.Email.Equals(request.Email), cancellationToken);
 
-                return Maybe.From(userOrNull)
+                var result = Maybe.From(userOrNull)
                     .ToResult("Incorrect email or password")
+                    .Ensure(user => user.IsActive,
+                    "User account is blocked temporarily")
                     .Ensure(user => _passwordHasher.Verify(request.Password, user.PasswordHash),
                     "Incorrect email or password"
                     ).Map(user => new Response(user.Id));
+
+                if (result.IsFailure)
+                {
+                    Maybe.From(userOrNull).Execute(user => user.AddFailedLoginAttempt());
+
+                }
+                else
+                {
+                    Maybe.From(userOrNull).Execute(user => user.SetLastLoginNow());
+                }
+                return result;
 
             }
         }

@@ -32,7 +32,6 @@ public class LedgerDbContext : DbContext, IAppDbContext
                   .HasForeignKey(j => j.TransactionId)
                   .IsRequired();
 
-            // 🔥 BARDZO WAŻNE:
             // Mówimy bazie: "Hej, lista 'Entries' w klasie Transaction jest tylko do odczytu.
             // Żeby ją zapisać, musisz dobrać się do prywatnego pola '_entries'."
             entity.Metadata.FindNavigation(nameof(Transaction.Entries))!

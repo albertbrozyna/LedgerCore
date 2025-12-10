@@ -1,0 +1,51 @@
+@host = http://localhost:5000
+@contentType = application/json
+
+### 1. Rejestracja u¿ytkownika - Happy Path
+# Oczekiwany wynik: 201 Created lub 200 OK (zale¿y od Twojej implementacji Results.Ok vs Created)
+POST {{host}}/api/v1/auth/register
+Content-Type: {{contentType}}
+
+{
+  "firstName": "Jan",
+  "lastName": "Kowalski",
+  "email": "jan.kowalski@ledger.com",
+  "password": "StrongPassword123!",
+  "role": 1,
+  "phoneNumber": "+48123456789"
+}
+
+### 2. B³¹d walidacji - Zbyt krótkie has³o i brak nazwiska
+# Oczekiwany wynik: 400 Bad Request (z b³êdami FluentValidation)
+POST {{host}}/api/v1/auth/register
+Content-Type: {{contentType}}
+
+{
+  "firstName": "Jan",
+  "lastName": "",
+  "email": "jan.test@ledger.com",
+  "password": "short",
+  "role": 1,
+  "phoneNumber": "123"
+}
+
+### 3. B³¹d walidacji - Niepoprawny format email
+# Oczekiwany wynik: 400 Bad Request
+POST {{host}}/api/v1/auth/register
+Content-Type: {{contentType}}
+
+{
+  "firstName": "Jan",
+  "lastName": "Nowak",
+  "email": "nie-to-nie-jest-email",
+  "password": "StrongPassword123!",
+  "role": 1,
+  "phoneNumber": "123"
+}
+
+### 4. B³¹d walidacji - Brak wymaganych pól (pusty JSON)
+# Oczekiwany wynik: 400 Bad Request
+POST {{host}}/api/v1/auth/register
+Content-Type: {{contentType}}
+
+{}
