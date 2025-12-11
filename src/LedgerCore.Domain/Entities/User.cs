@@ -45,7 +45,7 @@ namespace LedgerCore.Domain.Entities
             this.PasswordHash = passwordHash;
         }
 
-        bool validateEmail(string email)
+        private bool validateEmail(string email)
         {
             try
             {

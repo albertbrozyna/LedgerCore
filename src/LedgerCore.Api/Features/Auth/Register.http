@@ -1,4 +1,4 @@
-@host = http://localhost:5000
+@host = https://localhost:7258
 @contentType = application/json
 
 ### 1. Rejestracja u¿ytkownika - Happy Path
@@ -9,7 +9,7 @@ Content-Type: {{contentType}}
 {
   "firstName": "Jan",
   "lastName": "Kowalski",
-  "email": "jan.kowalski@ledger.com",
+  "email": "jan.kowalski12@ledger.com",
   "password": "StrongPassword123!",
   "role": 1,
   "phoneNumber": "+48123456789"

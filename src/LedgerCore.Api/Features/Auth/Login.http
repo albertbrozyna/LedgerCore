@@ -1,0 +1,13 @@
+@host = https://localhost:7258
+@contentType = application/json
+
+### 1. Rejestracja u¿ytkownika - Happy Path
+# Oczekiwany wynik: 201 Created lub 200 OK (zale¿y od Twojej implementacji Results.Ok vs Created)
+POST {{host}}/api/v1/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "jan.kowalski12@ledger.com",
+  "password": "StrongPassword123!"
+}
+

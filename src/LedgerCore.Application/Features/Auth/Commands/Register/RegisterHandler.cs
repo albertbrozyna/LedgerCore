@@ -41,7 +41,7 @@ namespace LedgerCore.Application.Features.Auth.Commands.Register
                 var exists = await _appDbContext.Users.AnyAsync(u => u.Email == email,cancellationToken);
 
                 return exists
-                    ? Result.Failure($"Użytkownik o email {email} już istnieje.")
+                    ? Result.Failure($"User with this email: {email} already exists.")
                     : Result.Success();
             }
 

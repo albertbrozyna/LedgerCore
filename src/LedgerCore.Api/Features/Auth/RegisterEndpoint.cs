@@ -1,5 +1,6 @@
 ﻿using Carter;
 using CSharpFunctionalExtensions;
+using LedgerCore.Api.Extensions;
 using LedgerCore.Application.Features.Auth.Commands.Register;
 using MediatR;
 
@@ -9,8 +10,12 @@ namespace LedgerCore.Api.Features.Auth
     {
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPost("api/v1/auth/register", async (Register.Command command, ISender sender) =>
+
+            var group = RouteGroupExtensions.MapVersionedGroup(app, "auth").WithTags("Auth");
+            group.MapPost("register", async (Register.Command command, ISender sender) =>
             {
+
+                
 
                 var result = await sender.Send(command);
 
@@ -19,9 +24,8 @@ namespace LedgerCore.Api.Features.Auth
                     return Results.BadRequest(result.Error);
                 }
 
-                return Results.Ok(result);
+                return Results.Created($"/api/v1/users/{result.Value.UserId}", result.Value);
             }).WithName("RegisterUser")
-                .WithTags("Authentication")
                 .WithSummary("Register a new user")
                 .WithDescription("Creates new user and returns his id")
               .Produces<Register.Response>(StatusCodes.Status201Created)
