@@ -1,20 +1,21 @@
 ﻿using Carter;
 using LedgerCore.Api.Extensions;
 using LedgerCore.Application.Features.Users.Commands.Block;
+using LedgerCore.Application.Features.Users.Queries.GetAllUsers;
 using MediatR;
 
 namespace LedgerCore.Api.Features.User
 {
-    public class BlockUserEndpoint : ICarterModule
+    public class GetAllUsersEndpoint : ICarterModule
     {
         public void AddRoutes(IEndpointRouteBuilder app)
         {
             var group = app.MapVersionedGroup("users").WithTags("users");
 
-            group.MapPost("{Id:guid}/block", async (Guid Id, ISender sender,CancellationToken ct) =>
+            group.MapGet("", async (ISender sender,CancellationToken ct) =>
             {
-                var command = new BlockUser.Command(Id);
-                var result = await sender.Send(command);
+                var query = GetAllUsers.Query();
+                var result = await sender.Send(query,ct);
 
                 return result.IsFailure ? Results.BadRequest(result.Error) : Results.Ok(result.Value);
             });

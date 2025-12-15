@@ -11,7 +11,7 @@ namespace LedgerCore.Api.Features.User
         {
             var group = RouteGroupExtensions.MapVersionedGroup(app, "users").WithTags("users");
 
-            group.MapGet("", async ([AsParameters] GetUserByEmail.Query query, ISender sender) =>
+            group.MapGet("", async ([AsParameters] GetUserByEmail.Query query, ISender sender,CancellationToken ct) =>
             {
                 var result = await sender.Send(query);
 

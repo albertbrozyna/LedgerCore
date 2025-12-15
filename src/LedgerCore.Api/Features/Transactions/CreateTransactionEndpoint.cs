@@ -7,7 +7,7 @@ public class CreateTransactionEndpoint : ICarterModule // Lub zwykła statyczna 
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapPost("api/v1/transactions", async (CreateTransaction.Command command, ISender sender) =>
+        app.MapPost("api/v1/transactions", async (CreateTransaction.Command command, ISender sender, CancellationToken ct) =>
         {
             var result = await sender.Send(command);
             return Results.Ok(result);

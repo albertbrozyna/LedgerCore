@@ -11,18 +11,13 @@ namespace LedgerCore.Api.Features.User
         {
             var group = RouteGroupExtensions.MapVersionedGroup(app, "users").WithTags("users");
 
-            group.MapGet("{Id:guid}", async (Guid Id, ISender sender) =>
+            group.MapGet("{Id:guid}", async (Guid Id, ISender sender, CancellationToken ct) =>
             {
                 var query = new GetUserById.Query(Id);
 
                 var result = await sender.Send(query);
 
-                if (result.IsFailure)
-                {
-                    return Results.BadRequest(result.Error);
-                }
-
-                return Results.Ok(result.Value);
+                return result.IsFailure ? Results.BadRequest(result.Error) : Results.Ok(result.Value);
             });
 
         }

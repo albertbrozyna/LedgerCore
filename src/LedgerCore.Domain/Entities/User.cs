@@ -60,20 +60,11 @@ namespace LedgerCore.Domain.Entities
 
         public void BlockUser()
         {
-            if (!IsActive)
-            {
-                throw new UserAlreadyBlockedException(Id);
-            }
-
             IsActive = false;
         }
 
         public void UnblockUser()
         {
-            if (IsActive)
-            {
-                throw new UserNotBlockedException(Id);
-            }
             IsActive = true;
         }
 
@@ -96,10 +87,6 @@ namespace LedgerCore.Domain.Entities
 
         public void DeleteUser()
         {
-            if (IsDeleted)
-            {
-                throw new UserDeletedException(Id);
-            }
             IsDeleted = true;
         }
     }

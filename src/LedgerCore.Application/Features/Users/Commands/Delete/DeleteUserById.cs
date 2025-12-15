@@ -1,4 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
+using FluentValidation;
 using LedgerCore.Application.Common.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -7,8 +8,19 @@ using Microsoft.EntityFrameworkCore;
 namespace LedgerCore.Application.Features.Users.Commands.Delete
 {
 
-    public partial class DeleteUser
+    public static class DeleteUser
     {
+        public record Command(Guid UserId) : IRequest<Result<Response>>;
+        public record Response();
+
+        public class Validator : AbstractValidator<DeleteUser.Command>
+        {
+            public Validator()
+            {
+                RuleFor(x => x.UserId).NotEmpty().WithMessage("User id cannot be empty.");
+            }
+        }
+
         public class DeleteUserHandler : IRequestHandler<Command, Result<Response>>
         {
             private readonly IAppDbContext _context;
@@ -23,11 +35,11 @@ namespace LedgerCore.Application.Features.Users.Commands.Delete
 
                 var result = Maybe.From(userOrNull)
                     .ToResult($"User with id {request.UserId} was not found.")
-                    .Tap(user => user.DeleteUser()); 
+                    .Tap(user => user.DeleteUser());
 
                 if (result.IsFailure)
                 {
-                    return result.ConvertFailure<Response>(); 
+                    return result.ConvertFailure<Response>();
                 }
 
                 await _context.SaveChangesAsync(cancellationToken);
@@ -36,6 +48,4 @@ namespace LedgerCore.Application.Features.Users.Commands.Delete
             }
         }
     }
-
-    
 }
