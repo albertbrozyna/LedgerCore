@@ -1,5 +1,5 @@
 ﻿using Carter;
-using LedgerCore.Api.Extensions;
+using LedgerCore.Api.Common.Extensions;
 using LedgerCore.Application.Features.Accounts.Commands.Create;
 using LedgerCore.Application.Features.Auth.Commands.Login;
 using MediatR;
@@ -22,7 +22,8 @@ namespace LedgerCore.Api.Features.Auth
               .WithDescription("Log in user to system and...")
               .Produces<Login.Response>()
               .ProducesValidationProblem()
-              .Accepts<CreateAccount.Command>("application/json");
+              .Accepts<CreateAccount.Command>("application/json")
+              .AllowAnonymous();
         }
     }
 }

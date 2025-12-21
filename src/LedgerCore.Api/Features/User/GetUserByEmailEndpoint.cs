@@ -1,5 +1,5 @@
 ﻿using Carter;
-using LedgerCore.Api.Extensions;
+using LedgerCore.Api.Common.Extensions;
 using LedgerCore.Application.Features.Users.Queries.GetUserByEmail;
 using MediatR;
 
@@ -11,8 +11,9 @@ namespace LedgerCore.Api.Features.User
         {
             var group = RouteGroupExtensions.MapVersionedGroup(app, "users").WithTags("users");
 
-            group.MapGet("", async ([AsParameters] GetUserByEmail.Query query, ISender sender,CancellationToken ct) =>
+            group.MapGet("{Email}", async (string email, ISender sender,CancellationToken ct) =>
             {
+                var query = new GetUserByEmail.Query(email);
                 var result = await sender.Send(query);
 
                 if (result.IsFailure)

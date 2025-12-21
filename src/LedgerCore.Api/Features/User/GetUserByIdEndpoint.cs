@@ -1,5 +1,5 @@
 ﻿using Carter;
-using LedgerCore.Api.Extensions;
+using LedgerCore.Api.Common.Extensions;
 using LedgerCore.Application.Features.Users.Queries.GetUserByEmail;
 using MediatR;
 

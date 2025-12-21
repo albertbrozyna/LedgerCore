@@ -14,19 +14,20 @@ namespace LedgerCore.Application.Features.Users.Queries.GetAllUsers
     {
         public record Query() : IRequest<Result<Response>>;
 
-        public record UserDto(
-             Guid Id,
-             string FirstName,
-             string LastName,
-             string Email,
-             UserRole Role,
-             bool IsActive,
-             bool IsDeleted,
-             DateTime CreatedAt,
-             DateTime LastLogin,
-             string? PhoneNumber,
-             string AvatarUrl
-            );
+        public record UserDto
+        {
+            public Guid Id { get; init; }
+            public string FirstName { get; init; }
+            public string LastName { get; init; }
+            public string Email { get; init; }
+            public UserRole Role { get; init; }
+            public bool IsActive { get; init; }
+            public bool IsDeleted { get; init; }
+            public DateTime CreatedAt { get; init; }
+            public DateTime LastLogin { get; init; }
+            public string? PhoneNumber { get; init; }
+            public string AvatarUrl { get; init; }
+        }
 
         public record Response(List<UserDto> Users);
 

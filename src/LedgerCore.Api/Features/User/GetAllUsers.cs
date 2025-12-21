@@ -1,5 +1,5 @@
 ﻿using Carter;
-using LedgerCore.Api.Extensions;
+using LedgerCore.Api.Common.Extensions;
 using LedgerCore.Application.Features.Users.Commands.Block;
 using LedgerCore.Application.Features.Users.Queries.GetAllUsers;
 using MediatR;
@@ -14,11 +14,11 @@ namespace LedgerCore.Api.Features.User
 
             group.MapGet("", async (ISender sender,CancellationToken ct) =>
             {
-                var query = GetAllUsers.Query();
+                var query = new GetAllUsers.Query();
                 var result = await sender.Send(query,ct);
 
                 return result.IsFailure ? Results.BadRequest(result.Error) : Results.Ok(result.Value);
-            });
+            }).RequireAuthorization();
         }
     }
 }

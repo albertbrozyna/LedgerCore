@@ -1,6 +1,6 @@
 ﻿using Carter;
 using CSharpFunctionalExtensions;
-using LedgerCore.Api.Extensions;
+using LedgerCore.Api.Common.Extensions;
 using LedgerCore.Application.Features.Auth.Commands.Register;
 using MediatR;
 
@@ -15,7 +15,7 @@ namespace LedgerCore.Api.Features.Auth
             group.MapPost("register", async (Register.Command command, ISender sender) =>
             {
 
-                
+
 
                 var result = await sender.Send(command);
 
@@ -30,7 +30,8 @@ namespace LedgerCore.Api.Features.Auth
                 .WithDescription("Creates new user and returns his id")
               .Produces<Register.Response>(StatusCodes.Status201Created)
               .Produces(StatusCodes.Status400BadRequest)
-              .AllowAnonymous();
+              .AllowAnonymous()
+              .RequireCors("Frontend");
         }
     }
 }

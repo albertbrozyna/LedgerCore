@@ -2,7 +2,7 @@
 using Asp.Versioning.Builder;
 
 // Namespace wskazuje na Twój nowy folder
-namespace LedgerCore.Api.Extensions
+namespace LedgerCore.Api.Common.Extensions
 {
     public static class RouteGroupExtensions
     {

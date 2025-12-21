@@ -3,6 +3,7 @@ using System;
 using LedgerCore.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LedgerCore.Infrastructure_.Migrations
 {
     [DbContext(typeof(LedgerDbContext))]
-    partial class LedgerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251218120313_InitialCreateV2")]
+    partial class InitialCreateV2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -41,7 +44,7 @@ namespace LedgerCore.Infrastructure_.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("accounts");
+                    b.ToTable("Accounts");
                 });
 
             modelBuilder.Entity("LedgerCore.Domain.Entities.JournalEntry", b =>
@@ -72,7 +75,7 @@ namespace LedgerCore.Infrastructure_.Migrations
 
                     b.HasIndex("TransactionId");
 
-                    b.ToTable("journalentries");
+                    b.ToTable("JournalEntries");
                 });
 
             modelBuilder.Entity("LedgerCore.Domain.Entities.Transaction", b =>
@@ -90,7 +93,7 @@ namespace LedgerCore.Infrastructure_.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("transactions");
+                    b.ToTable("Transactions");
                 });
 
             modelBuilder.Entity("LedgerCore.Domain.Entities.User", b =>
@@ -178,7 +181,7 @@ namespace LedgerCore.Infrastructure_.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
 
-                    b.ToTable("aspnetusers", (string)null);
+                    b.ToTable("AspNetUsers", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
@@ -205,7 +208,7 @@ namespace LedgerCore.Infrastructure_.Migrations
                         .IsUnique()
                         .HasDatabaseName("RoleNameIndex");
 
-                    b.ToTable("aspnetroles", (string)null);
+                    b.ToTable("AspNetRoles", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -229,7 +232,7 @@ namespace LedgerCore.Infrastructure_.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("aspnetroleclaims", (string)null);
+                    b.ToTable("AspNetRoleClaims", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
@@ -253,7 +256,7 @@ namespace LedgerCore.Infrastructure_.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("aspnetuserclaims", (string)null);
+                    b.ToTable("AspNetUserClaims", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
@@ -274,7 +277,7 @@ namespace LedgerCore.Infrastructure_.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("aspnetuserlogins", (string)null);
+                    b.ToTable("AspNetUserLogins", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
@@ -289,7 +292,7 @@ namespace LedgerCore.Infrastructure_.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("aspnetuserroles", (string)null);
+                    b.ToTable("AspNetUserRoles", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
@@ -308,7 +311,7 @@ namespace LedgerCore.Infrastructure_.Migrations
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
-                    b.ToTable("aspnetusertokens", (string)null);
+                    b.ToTable("AspNetUserTokens", (string)null);
                 });
 
             modelBuilder.Entity("LedgerCore.Domain.Entities.JournalEntry", b =>

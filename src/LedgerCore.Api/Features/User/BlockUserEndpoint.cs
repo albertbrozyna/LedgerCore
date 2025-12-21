@@ -1,6 +1,7 @@
 ﻿using Carter;
-using LedgerCore.Api.Extensions;
+using LedgerCore.Api.Common.Extensions;
 using LedgerCore.Application.Features.Users.Commands.Block;
+using LedgerCore.Domain.Enums;
 using MediatR;
 
 namespace LedgerCore.Api.Features.User
@@ -17,7 +18,7 @@ namespace LedgerCore.Api.Features.User
                 var result = await sender.Send(command);
 
                 return result.IsFailure ? Results.BadRequest(result.Error) : Results.Ok(result.Value);
-            });
+            }).RequireAuthorization(policy => policy.RequireRole(UserRole.Admin.ToString()));
         }
     }
 }
