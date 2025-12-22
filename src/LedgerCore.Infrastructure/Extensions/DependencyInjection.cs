@@ -1,8 +1,8 @@
 ﻿using LedgerCore.Application.Common.Interfaces;
 using LedgerCore.Application.Common.Interfaces.Authentication;
 using LedgerCore.Domain.Entities;
-using LedgerCore.Infrastructure.Authentication;
 using LedgerCore.Infrastructure.Persistence;
+using LedgerCore.Infrastructure.Persistence.Context;
 using LedgerCore.Infrastructure.Services;
 using LedgerCore.Infrastructure.Services.Identity;
 using LedgerCore.Infrastructure.Services.Identity.Login;
@@ -65,9 +65,9 @@ namespace LedgerCore.Infrastructure.Extensions
             .AddSignInManager<SignInManager<User>>()
             .AddEntityFrameworkStores<LedgerDbContext>();
 
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+            
 
-            services.AddSingleton<IJwtTokenProvider,JwtTokenProvider>();
+            services.AddScoped<ITokenService,TokenService>();
             return services;
         }
 

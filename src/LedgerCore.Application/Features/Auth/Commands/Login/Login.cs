@@ -10,8 +10,8 @@ namespace LedgerCore.Application.Features.Auth.Commands.Login
     public static class Login
     {
         public record Command(string Email, string Password) : IRequest<Result<Response>>;
-        public record Response(Guid UserId,string Token);
-        public class Handler(ILoginUserService loginService,IJwtTokenProvider jwtTokenProvider) : IRequestHandler<Command, Result<Response>>
+        public record Response(Guid UserId,string AccessToken,string RefreshToken);
+        public class Handler(ILoginUserService loginService,ITokenService tokenService) : IRequestHandler<Command, Result<Response>>
         {
             public async Task<Result<Response>> Handle(Command request, CancellationToken cancellationToken)
             {
@@ -22,10 +22,14 @@ namespace LedgerCore.Application.Features.Auth.Commands.Login
                     return Result.Failure<Response>(result.Error);
                 }
                 var user = result.Value;
-                var roles = await loginService.GetUserRoles(user);
-                var token = jwtTokenProvider.Generate(user,roles);
+                var userRoles = await loginService.GetUserRoles(user);
 
-                return Result.Success(new Response(user.Id, token));
+
+                var accessToken = tokenService.GenerateAccessToken(user, userRoles);
+                var refreshToken = await tokenService.GenerateRefreshTokenAsync(user.Id, cancellationToken);
+
+
+                return Result.Success(new Response(user.Id, accessToken,refreshToken));
             }
 
         }

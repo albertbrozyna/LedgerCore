@@ -17,12 +17,13 @@ namespace LedgerCore.Api.Common.Extensions
         public static IServiceCollection AddAuth(this IServiceCollection services, IConfiguration configuration)
         {
 
-            var jwtOptions = configuration.GetSection("jwt").Get<JwtOptions>();
+            var jwtOptions = configuration.GetSection("Jwt").Get<JwtOptions>();
 
             // Authentication
             services.AddAuthorization();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
             {
+                o.MapInboundClaims = false; // Don't convert claim names into long xml schema names
                 o.RequireHttpsMetadata = false;
                 o.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
                 {

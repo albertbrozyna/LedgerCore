@@ -10,7 +10,7 @@ namespace LedgerCore.Infrastructure.Services
 
         public void DeleteFile(string folderName, string filename)
         {
-            string rootPath = environment.WebRootPath;
+            string rootPath = environment.ContentRootPath;
             string fullPath = Path.Combine(rootPath, folderName, filename);
 
             if (File.Exists(fullPath))
@@ -28,7 +28,7 @@ namespace LedgerCore.Infrastructure.Services
 
         public bool FileExist(string folderName, string filename)
         {
-            string rootPath = environment.WebRootPath;
+            string rootPath = environment.ContentRootPath;
             string fullPath = Path.Combine(rootPath, folderName, filename);
 
             return File.Exists(fullPath);
@@ -36,7 +36,7 @@ namespace LedgerCore.Infrastructure.Services
 
         public async Task<string> SaveFileAsync(string folderName,string fileName, IFormFile file, CancellationToken cancellationToken)
         {
-            string rootPath = environment.WebRootPath;
+            string rootPath = environment.ContentRootPath;
 
             // 2. Tworzymy podfolder, żeby nie śmiecić w root
             string subFolder = Path.Combine("uploads", "profile-photos");

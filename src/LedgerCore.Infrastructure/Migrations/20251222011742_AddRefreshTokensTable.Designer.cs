@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LedgerCore.Infrastructure_.Migrations
 {
     [DbContext(typeof(LedgerDbContext))]
-    [Migration("20251218120313_InitialCreateV2")]
-    partial class InitialCreateV2
+    [Migration("20251222011742_AddRefreshTokensTable")]
+    partial class AddRefreshTokensTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -44,7 +44,7 @@ namespace LedgerCore.Infrastructure_.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Accounts");
+                    b.ToTable("accounts");
                 });
 
             modelBuilder.Entity("LedgerCore.Domain.Entities.JournalEntry", b =>
@@ -75,7 +75,36 @@ namespace LedgerCore.Infrastructure_.Migrations
 
                     b.HasIndex("TransactionId");
 
-                    b.ToTable("JournalEntries");
+                    b.ToTable("journalentries");
+                });
+
+            modelBuilder.Entity("LedgerCore.Domain.Entities.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens", (string)null);
                 });
 
             modelBuilder.Entity("LedgerCore.Domain.Entities.Transaction", b =>
@@ -93,7 +122,7 @@ namespace LedgerCore.Infrastructure_.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Transactions");
+                    b.ToTable("transactions");
                 });
 
             modelBuilder.Entity("LedgerCore.Domain.Entities.User", b =>
@@ -181,7 +210,7 @@ namespace LedgerCore.Infrastructure_.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
 
-                    b.ToTable("AspNetUsers", (string)null);
+                    b.ToTable("aspnetusers", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
@@ -208,7 +237,7 @@ namespace LedgerCore.Infrastructure_.Migrations
                         .IsUnique()
                         .HasDatabaseName("RoleNameIndex");
 
-                    b.ToTable("AspNetRoles", (string)null);
+                    b.ToTable("aspnetroles", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -232,7 +261,7 @@ namespace LedgerCore.Infrastructure_.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("AspNetRoleClaims", (string)null);
+                    b.ToTable("aspnetroleclaims", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
@@ -256,7 +285,7 @@ namespace LedgerCore.Infrastructure_.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AspNetUserClaims", (string)null);
+                    b.ToTable("aspnetuserclaims", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
@@ -277,7 +306,7 @@ namespace LedgerCore.Infrastructure_.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AspNetUserLogins", (string)null);
+                    b.ToTable("aspnetuserlogins", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
@@ -292,7 +321,7 @@ namespace LedgerCore.Infrastructure_.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("AspNetUserRoles", (string)null);
+                    b.ToTable("aspnetuserroles", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
@@ -311,7 +340,7 @@ namespace LedgerCore.Infrastructure_.Migrations
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
-                    b.ToTable("AspNetUserTokens", (string)null);
+                    b.ToTable("aspnetusertokens", (string)null);
                 });
 
             modelBuilder.Entity("LedgerCore.Domain.Entities.JournalEntry", b =>
@@ -331,6 +360,17 @@ namespace LedgerCore.Infrastructure_.Migrations
                     b.Navigation("Account");
 
                     b.Navigation("Transaction");
+                });
+
+            modelBuilder.Entity("LedgerCore.Domain.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("LedgerCore.Domain.Entities.User", "User")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -387,6 +427,11 @@ namespace LedgerCore.Infrastructure_.Migrations
             modelBuilder.Entity("LedgerCore.Domain.Entities.Transaction", b =>
                 {
                     b.Navigation("Entries");
+                });
+
+            modelBuilder.Entity("LedgerCore.Domain.Entities.User", b =>
+                {
+                    b.Navigation("RefreshTokens");
                 });
 #pragma warning restore 612, 618
         }

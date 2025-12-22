@@ -1,5 +1,6 @@
 ﻿using LedgerCore.Application.Common.Interfaces;
 using LedgerCore.Domain.Enums;
+using LedgerCore.Infrastructure.Persistence.Context;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

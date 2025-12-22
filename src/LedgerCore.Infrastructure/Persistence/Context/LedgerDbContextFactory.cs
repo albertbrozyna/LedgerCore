@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace LedgerCore.Infrastructure.Persistence;
+namespace LedgerCore.Infrastructure.Persistence.Context;
 
 // To jest instrukcja TYLKO dla terminala (dotnet ef).
 // Aplikacja tego nie używa, tylko migrator.

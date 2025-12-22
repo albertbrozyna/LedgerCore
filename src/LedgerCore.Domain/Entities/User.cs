@@ -10,6 +10,7 @@ namespace LedgerCore.Domain.Entities
         public DateTime CreatedAt { get; private set; }
         public DateTime LastLogin { get; private set; }
         public string? AvatarUrl { get; private set; }
+        public ICollection<RefreshToken>RefreshTokens { get; private set; }
         public User() { }
 
         public User(string firstName, string lastName, string email, string phoneNumber)
