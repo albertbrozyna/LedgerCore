@@ -6,9 +6,6 @@ using LedgerCore.Domain.Entities;
 using LedgerCore.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LedgerCore.Application.Features.Auth.Commands.Register
 {
@@ -29,14 +26,29 @@ namespace LedgerCore.Application.Features.Auth.Commands.Register
             }
         }
 
-        public class Handler(IRegisterUserService registerUserService) : IRequestHandler<Command, Result<Response>>
+        public class Handler(IRegisterUserService registerUserService, IVerificationCodeService verificationCodeService, IEmailSender emailSender) : IRequestHandler<Command, Result<Response>>
         {
             public async Task<Result<Response>> Handle(Command request, CancellationToken cancellationToken)
             {
                 User newUser = new(request.FirstName, request.LastName, request.Email, request.PhoneNumber);
 
-                return await registerUserService.RegisterUser(newUser, request.Password, request.Role).Map(user => new Response(user.Id));
+                var result = await registerUserService.RegisterUser(newUser, request.Password, request.Role).Map(user => new Response(user.Id));
+
+                if (result.IsFailure)
+                {
+                    return result;
+                }
+
+                var code = await verificationCodeService.GenerateCode(newUser, cancellationToken);
+
+                var topic = "Verify your account";
+
+                var content = $"Hello, your verification code to ledgerCoreApp is: {code}";
+
+                await emailSender.SendEmail(topic, content, newUser.Email);
+
+                return result;
             }
-        }     
+        }
     }
 }

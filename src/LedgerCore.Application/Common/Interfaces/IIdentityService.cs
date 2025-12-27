@@ -1,4 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
+using LedgerCore.Domain.Entities;
 
 namespace LedgerCore.Application.Common.Interfaces
 {
@@ -7,5 +8,7 @@ namespace LedgerCore.Application.Common.Interfaces
         Task<Result> UpdateUserProfilePhoto(Guid userId, string profilePhotoUrl);
 
         Task<IList<string>> GetUserRoles(Guid userId);
+
+        Task<User?> GetUserById(string userId);
     }
 }

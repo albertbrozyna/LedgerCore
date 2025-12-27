@@ -51,5 +51,12 @@ namespace LedgerCore.Domain.Entities
             this.AvatarUrl = profilePhotoUrl;
         }
 
+        public bool IsEmailVerified() => EmailConfirmed;
+
+        public void VerifyEmail()
+        {
+            EmailConfirmed = true;
+        }
+
     }
 }

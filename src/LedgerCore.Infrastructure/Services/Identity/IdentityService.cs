@@ -2,6 +2,7 @@
 using LedgerCore.Application.Common.Interfaces;
 using LedgerCore.Domain.Entities;
 using LedgerCore.Domain.Exceptions;
+using LedgerCore.Infrastructure_.Migrations;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,11 @@ namespace LedgerCore.Infrastructure.Services.Identity
 {
     public class IdentityService(UserManager<User>userManager) : IIdentityService
     {
+        public async Task<User?> GetUserById(string userId)
+        {
+            return await userManager.FindByIdAsync(userId.ToString());
+        }
+
         public async Task<IList<string>> GetUserRoles(Guid userId)
         {
             var user = await userManager.FindByIdAsync(userId.ToString());
@@ -43,5 +49,7 @@ namespace LedgerCore.Infrastructure.Services.Identity
 
             return Result.Success();
         }
+
+       
     }
 }

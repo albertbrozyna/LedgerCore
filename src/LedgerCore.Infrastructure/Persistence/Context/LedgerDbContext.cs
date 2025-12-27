@@ -17,6 +17,7 @@ public class LedgerDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     public DbSet<Transaction> Transactions { get; set; }
     public DbSet<JournalEntry> JournalEntries { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<UserVerificationToken> UserVerificationTokens { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

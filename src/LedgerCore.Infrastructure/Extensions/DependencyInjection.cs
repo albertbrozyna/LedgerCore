@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.IdentityModel.Tokens.Jwt;
 
 namespace LedgerCore.Infrastructure.Extensions
 {
@@ -25,6 +24,9 @@ namespace LedgerCore.Infrastructure.Extensions
             services.AddScoped<IFileStorageService, LocalFileStorageService>();
             services.AddScoped<IRegisterUserService, RegisterUserService>();
             services.AddScoped<ILoginUserService, LoginUserService>();
+            services.AddScoped<IVerificationCodeService, VerificationCodeService>();
+            services.AddScoped<IEmailSender, EmailSender>();
+
 
 
             return services;
@@ -51,7 +53,7 @@ namespace LedgerCore.Infrastructure.Extensions
             return services;
         }
 
-        public static IServiceCollection AddIdentity(this IServiceCollection services,IConfiguration configuration)
+        public static IServiceCollection AddIdentity(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddIdentityCore<User>(options =>
             {
@@ -65,9 +67,9 @@ namespace LedgerCore.Infrastructure.Extensions
             .AddSignInManager<SignInManager<User>>()
             .AddEntityFrameworkStores<LedgerDbContext>();
 
-            
 
-            services.AddScoped<ITokenService,TokenService>();
+
+            services.AddScoped<ITokenService, TokenService>();
             return services;
         }
 

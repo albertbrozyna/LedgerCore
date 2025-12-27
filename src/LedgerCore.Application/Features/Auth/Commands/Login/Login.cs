@@ -22,6 +22,12 @@ namespace LedgerCore.Application.Features.Auth.Commands.Login
                     return Result.Failure<Response>(result.Error);
                 }
                 var user = result.Value;
+
+                if (!user.EmailConfirmed)
+                {
+                    return Result.Failure<Response>("User email is not verified");
+                }
+
                 var userRoles = await loginService.GetUserRoles(user);
 
 
