@@ -24,7 +24,5 @@ namespace LedgerCore.Application.Features.Auth.Commands.VerifyEmail
 
             }
         }
-
-
     }
 }

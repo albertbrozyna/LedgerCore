@@ -12,13 +12,13 @@ namespace LedgerCore.Api.Features.User
         {
             var group = app.MapVersionedGroup("users").WithTags("users");
 
-            group.MapGet("", async (ISender sender,CancellationToken ct) =>
+            group.MapGet("", async (ISender sender, CancellationToken ct) =>
             {
                 var query = new GetAllUsers.Query();
-                var result = await sender.Send(query,ct);
+                var result = await sender.Send(query, ct);
 
                 return result.IsFailure ? Results.BadRequest(result.Error) : Results.Ok(result.Value);
-            }).RequireAuthorization();
+            }).AllowAnonymous();
         }
     }
 }

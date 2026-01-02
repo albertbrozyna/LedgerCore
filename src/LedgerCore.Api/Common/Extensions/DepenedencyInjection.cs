@@ -107,7 +107,7 @@ namespace LedgerCore.Api.Common.Extensions
             {
                 options.AddPolicy("Frontend", builder =>
                 {
-                    builder.WithOrigins("https://localhost:3000");
+                    builder.WithOrigins("http://localhost:5173");
                     builder.AllowAnyHeader();
                     builder.AllowAnyMethod();
                     builder.AllowCredentials();
