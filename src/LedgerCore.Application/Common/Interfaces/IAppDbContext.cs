@@ -1,18 +1,26 @@
-﻿using LedgerCore.Domain.Entities;
+using LedgerCore.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LedgerCore.Application.Common.Interfaces
 {
     public interface IAppDbContext
     {
-        DbSet<Account>Accounts{get;}
+        DbSet<Account> Accounts { get; }
         DbSet<Transaction> Transactions { get; }
+        DbSet<JournalEntry> JournalEntries { get; }
         DbSet<User> Users { get; }
-        DbSet<RefreshToken>RefreshTokens { get; }
-        DbSet<UserVerificationToken> UserVerificationTokens { get;  }
+        DbSet<RefreshToken> RefreshTokens { get; }
+        DbSet<UserVerificationToken> UserVerificationTokens { get; }
+        DbSet<Contractor> Contractors { get; }
+        DbSet<Invoice> Invoices { get; }
+        DbSet<InvoiceLine> InvoiceLines { get; }
+        DbSet<Payment> Payments { get; }
+        DbSet<AuditEntry> AuditEntries { get; }
+        DbSet<PeriodLock> PeriodLocks { get; }
+        DbSet<Company> Companies { get; }
+        DbSet<UserCompany> UserCompanies { get; }
+        DbSet<Attachment> Attachments { get; }
+        DbSet<TransactionTemplate> TransactionTemplates { get; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken);
     }

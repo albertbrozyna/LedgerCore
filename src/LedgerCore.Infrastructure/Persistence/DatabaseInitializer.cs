@@ -1,54 +1,28 @@
-﻿using LedgerCore.Application.Common.Interfaces;
 using LedgerCore.Domain.Enums;
 using LedgerCore.Infrastructure.Persistence.Context;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LedgerCore.Infrastructure.Persistence
 {
     public class DatabaseInitializer(LedgerDbContext appDbContext, RoleManager<IdentityRole<Guid>> roleManager, ILogger<DatabaseInitializer> logger)
     {
-
         public async Task InitializeAsync()
         {
-            logger.LogInformation("Checking database connection...");
-
-            if (!await appDbContext.Database.CanConnectAsync())
-                throw new Exception("Cannot connect to database");
-
-            logger.LogInformation("Connected to database.");
-
-            // Automatyczne migracje
+            // Tworzy plik bazy przy pierwszym uruchomieniu i stosuje migracje przy aktualizacjach
             await appDbContext.Database.MigrateAsync();
             await SeedRolesAsync();
-            logger.LogInformation("Migrations applied successfully.");
+            logger.LogInformation("Baza danych gotowa.");
         }
-
 
         private async Task SeedRolesAsync()
         {
-            string[] roleNames = Enum.GetNames<UserRole>();
-
-            foreach (var roleName in roleNames)
+            foreach (var roleName in Enum.GetNames<UserRole>())
             {
-                // Sprawdzamy czy rola już istnieje
-                var roleExist = await roleManager.RoleExistsAsync(roleName);
-
-                if (!roleExist)
-                {
-                    logger.LogInformation("Creating role: {RoleName}", roleName);
-                    // Tworzymy nową rolę
-                    await roleManager.CreateAsync(new IdentityRole<Guid>
-                    {
-                        Name = roleName
-                    });
-                }
+                if (!await roleManager.RoleExistsAsync(roleName))
+                    await roleManager.CreateAsync(new IdentityRole<Guid> { Name = roleName });
             }
-
         }
     }
 }

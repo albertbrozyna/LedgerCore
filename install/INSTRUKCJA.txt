@@ -1,0 +1,78 @@
+LEDGERCORE - INSTRUKCJA DLA BIURA
+==================================
+
+INSTALACJA
+  1. Rozpakuj paczkę LedgerCore-win-x64.zip w dowolnym miejscu.
+  2. Uruchom Install.cmd (nie wymaga uprawnień administratora).
+  3. Na pulpicie pojawi się skrót "LedgerCore".
+
+PIERWSZE URUCHOMIENIE
+  Kliknij skrót. Otworzy się okno serwera (zostaw je otwarte) i przeglądarka pod adresem
+  http://localhost:5000. Przy pierwszym uruchomieniu utworzysz konto administratora;
+  dodany zostanie domyślny plan kont, który możesz dowolnie zmieniać (menu "Plan kont").
+
+CODZIENNA PRACA
+  - Role: Administrator (wszystko, w tym użytkownicy i kopia zapasowa),
+          Księgowy (księgowanie, plan kont, raporty), Podgląd (tylko odczyt).
+  - Księgowanie wymaga zbilansowania: suma Winien = suma Ma.
+  - Księgowań nie usuwa się - błąd poprawia się przyciskiem "Storno" (zapis odwrotny).
+  - Dziennik i raporty można eksportować do CSV (otwiera się w Excelu).
+  - Faktury: menu "Faktury" - wystawienie sprzedaży lub rejestracja zakupu księguje się automatycznie
+    (potrzebne konta 201, 202, 220 oraz 700/402 - są w domyślnym planie kont). Płatności rejestrujesz na karcie faktury.
+  - Po złożeniu deklaracji VAT zamknij okres: "Administracja" -> "Zamknij okres" (blokuje księgowanie wstecz).
+  - "Administracja" zawiera też dane firmy (potrzebne na fakturze), zamknięcie roku obrotowego i dziennik audytu.
+  - Wydruk PDF: na karcie faktury "Drukuj / PDF", w raportach "Drukuj / PDF" -> w oknie drukowania wybierz
+    drukarkę "Zapisz jako PDF" (Microsoft Print to PDF).
+  - Zamknięcie roku (Administracja): zeruje przychody i koszty, wynik trafia na konto 860, a księgowanie za ten rok
+    zostaje zablokowane. Rób to po sporządzeniu bilansu i rozliczeń rocznych. Operacji nie można cofnąć
+    (odblokować okres można, ale księgowanie zamykające pozostaje - w razie pomyłki zrób storno ręcznie).
+  - KSeF i JPK_V7: w tej wersji brak generowania plików dla urzędu - użyj rejestrów VAT (Raporty) jako podstawy.
+
+WIELE FIRM (KLIENCI BIURA)
+  Menu "Firmy" (Administrator): dodaj firmę klienta - dostanie własny plan kont, faktury, kontrahentów i raporty.
+  Aktywną firmę zmieniasz listą "Firma" w lewym menu (widoczna, gdy masz dostęp do więcej niż jednej firmy).
+  Dane firm są od siebie całkowicie oddzielone. Dostęp pracowników do firm ustawiasz w menu "Użytkownicy" -> "Firmy"
+  (nowy użytkownik dostaje dostęp do firmy, w której go tworzysz; Administrator widzi wszystkie firmy).
+  Dane wystawcy na fakturach (nazwa, NIP, rachunek) to dane wybranej firmy: "Administracja" -> "Dane firmy".
+  Zamknięcie okresu, roku i dziennik audytu dotyczą tylko aktualnie wybranej firmy.
+
+FAKTURY KORYGUJĄCE
+  Na karcie faktury kliknij "Wystaw korektę", wpisz kwoty netto PO korekcie (i ewentualnie nową stawkę VAT).
+  Aplikacja wyliczy różnice, zaksięguje korektę i zmieni kwotę do zapłaty na fakturze korygowanej.
+  Nie można zmniejszyć faktury poniżej kwoty już zapłaconej (zwrot nadpłaty rozlicz osobno).
+  Fakturę z aktywną korektą anulujesz dopiero po anulowaniu jej korekt.
+
+IMPORT WYCIĄGU BANKOWEGO
+  Menu "Import wyciągu": wczytaj plik CSV z banku (kolumny: data, kwota, tytuł, opcjonalnie kontrahent) albo wklej jego treść.
+  Wpływy dopasują się do faktur sprzedaży, wypłaty do faktur zakupu (po numerze faktury w tytule i kwocie).
+  Sprawdź dopasowania, popraw w razie potrzeby i kliknij "Zaksięguj zaznaczone". Nie importuj dwa razy tego samego wyciągu.
+
+ZAŁĄCZNIKI I SZABLONY
+  Na karcie faktury możesz dodać skan lub PDF (do 10 MB). Przy "Nowym księgowaniu" zapiszesz bieżące zapisy jako
+  szablon (np. "Czynsz") i użyjesz go następnym razem jednym kliknięciem.
+
+KOPIA ZAPASOWA  (WAŻNE - rób regularnie!)
+  Aplikacja sama robi kopię raz dziennie (folder %LOCALAPPDATA%LedgerCoredataackups, ostatnie 14).
+  Kopie są na tym samym komputerze - skopiuj je okresowo na dysk zewnętrzny lub do chmury.
+  Lista kopii i ręczne tworzenie: "Administracja" -> "Kopie zapasowe". Kopia obejmuje wszystkie firmy.
+  Administrator: menu "Użytkownicy" -> "Pobierz kopię zapasową" (jeden plik .db).
+  Zapisz go na dysku zewnętrznym / w chmurze. Wszystkie dane leżą też w folderze:
+      %LOCALAPPDATA%\LedgerCore\data
+  Przywracanie: zamknij aplikację i podmień plik ledgercore.db w tym folderze kopią.
+
+AKTUALIZACJA
+  Rozpakuj nową paczkę i ponownie uruchom Install.cmd. Dane (folder "data") zostają nietknięte,
+  a baza jest aktualizowana automatycznie przy starcie.
+
+PRACA W SIECI BIURA (opcjonalnie)
+  Domyślnie aplikacja jest dostępna tylko na tym komputerze. Aby inni mogli wejść z przeglądarki:
+    1. Przed uruchomieniem ustaw zmienną: set ASPNETCORE_URLS=http://0.0.0.0:5000
+       (np. dopisz tę linię do Start-LedgerCore.cmd w folderze %LOCALAPPDATA%\LedgerCore\app)
+    2. Zezwól na port 5000 w zaporze Windows.
+    3. Pozostałe osoby wchodzą na http://NAZWA-KOMPUTERA:5000
+  Uwaga: połączenie jest nieszyfrowane (HTTP) - używaj tylko w zaufanej sieci biura.
+
+PROBLEMY
+  - "Port 5000 zajęty": ustaw inny port w ASPNETCORE_URLS.
+  - Zapomniane hasło: administrator ustawia nowe w menu "Użytkownicy" -> "Zmień hasło".
+  - Zapomniane hasło JEDYNEGO administratora: wymaga ręcznej interwencji (skontaktuj się z wykonawcą).

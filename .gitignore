@@ -31,3 +31,9 @@ Desktop.ini
 
 # Mac (jeśli ktoś z zespołu ma Maca)
 .DS_Store
+## --- LedgerCore ---
+src/LedgerCore.Api/wwwroot/
+**/data/
+*.db
+src/LedgerCore.Api/uploads/
+dist/

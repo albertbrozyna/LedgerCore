@@ -16,7 +16,7 @@ namespace LedgerCore.Api.Features.User
             {
                 var result = await sender.Send(command);
 
-                return result.IsFailure ? Results.BadRequest(result.Error) : Results.Ok(result.Value);
+                return result.IsFailure ? Results.Problem(result.Error, statusCode: StatusCodes.Status400BadRequest) : Results.Ok(result.Value);
             }).RequireAuthorization(policy => policy.RequireRole(UserRole.Admin.ToString()));
 
         }

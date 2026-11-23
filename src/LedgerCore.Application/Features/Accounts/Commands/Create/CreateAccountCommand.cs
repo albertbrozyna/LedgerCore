@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using LedgerCore.Domain.Enums;
 using MediatR;
 
@@ -13,8 +13,9 @@ public static partial class CreateAccount
     {
         public Validator()
         {
-            RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
-            RuleFor(x => x.Code).Length(3);
+            RuleFor(x => x.Name).NotEmpty().WithMessage("Nazwa konta jest wymagana").MaximumLength(200);
+            RuleFor(x => x.Code).NotEmpty().WithMessage("Numer konta jest wymagany").MaximumLength(30);
+            RuleFor(x => x.Type).IsInEnum().WithMessage("Nieprawidłowy typ konta");
         }
     }
 }

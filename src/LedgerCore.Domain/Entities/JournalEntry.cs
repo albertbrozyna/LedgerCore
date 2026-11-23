@@ -4,8 +4,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LedgerCore.Domain.Entities;
 
-public class JournalEntry
+public class JournalEntry : ICompanyOwned
 {
+    /// <summary>Firma (klient biura), do której należy rekord. Ustawiane automatycznie przy zapisie.</summary>
+    public Guid CompanyId { get; private set; }
+
     public Guid Id { get; private set; }
 
     // RELACJE

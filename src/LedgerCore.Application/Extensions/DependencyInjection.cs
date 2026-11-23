@@ -27,8 +27,11 @@ namespace LedgerCore.Application.Extensions
 
             // Filestorage settings
             services.Configure<FileStorageSettings>(configuration.GetSection("FileStorageSettings"));
+            services.Configure<AuthOptions>(configuration.GetSection("Auth"));
 
 
+            services.AddScoped<LedgerCore.Application.Common.Ledger.AuditLog>();
+            services.AddScoped<ICompanyContext, CompanyContext>();
             services.AddAutoMapper(cfg => { },Assembly.GetExecutingAssembly());
             return services;
         } 

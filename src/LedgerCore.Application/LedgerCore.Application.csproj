@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Features\Transactions\Commands\Delete\" />
     <Folder Include="Features\Users\Common\" />
   </ItemGroup>
 

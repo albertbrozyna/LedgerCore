@@ -17,14 +17,13 @@ namespace LedgerCore.Api.Features.Auth
 
                 if (result.IsFailure)
                 {
-                    return Results.BadRequest(result.Error);
+                    return Results.Problem(result.Error, statusCode: StatusCodes.Status400BadRequest);
                 }
 
                 return Results.Ok(result.Value);
             }).WithName("RegisterUser")
                 .WithSummary("Resend verification code")
                 .WithDescription("Resend verification code to users email")
-              .Produces<Register.Response>(StatusCodes.Status201Created)
               .Produces(StatusCodes.Status400BadRequest)
               .AllowAnonymous()
               .RequireCors("Frontend");

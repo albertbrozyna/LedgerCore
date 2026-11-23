@@ -1,33 +1,27 @@
-﻿using LedgerCore.Application.Common.Interfaces;
+using LedgerCore.Application.Common.Interfaces;
 using LedgerCore.Domain.Entities;
+using LedgerCore.Domain.Exceptions;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace LedgerCore.Application.Features.Accounts.Commands.Create
 {
-
     public static partial class CreateAccount
     {
-        public class CreateAccountHandler : IRequestHandler<Command, Result>
+        public class CreateAccountHandler(IAppDbContext context, LedgerCore.Application.Common.Ledger.AuditLog audit) : IRequestHandler<Command, Result>
         {
-            private readonly IAppDbContext _context;
-
-            public CreateAccountHandler(IAppDbContext context)
-            {
-                _context = context;
-            }
-
             public async Task<Result> Handle(Command request, CancellationToken cancellationToken)
             {
-                var account = new Account(request.Name, request.Code, request.Type);
+                var code = request.Code.Trim();
+                if (await context.Accounts.AnyAsync(a => a.Code == code, cancellationToken))
+                    throw new DomainValidationException($"Konto o numerze {code} już istnieje");
 
-                _context.Accounts.Add(account);
-
-                await _context.SaveChangesAsync(cancellationToken);
-
+                var account = new Account(request.Name, code, request.Type);
+                context.Accounts.Add(account);
+                await audit.Add("Konto", $"Dodano konto {account.Code} {account.Name}", cancellationToken);
+                await context.SaveChangesAsync(cancellationToken);
                 return new Result(account.Id);
             }
         }
-
     }
 }
-

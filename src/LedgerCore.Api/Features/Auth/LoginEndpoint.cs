@@ -15,7 +15,7 @@ namespace LedgerCore.Api.Features.Auth
             group.MapPost("login", async (Login.Command command, ISender sender) =>
             {
                 var result = await sender.Send(command);
-                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.Problem(result.Error, statusCode: StatusCodes.Status401Unauthorized, title: "Logowanie nie powiodło się");
             })
              .WithName("Login")
               .WithSummary("Log in user to system")

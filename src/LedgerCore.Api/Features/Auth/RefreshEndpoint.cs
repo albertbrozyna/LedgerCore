@@ -16,7 +16,7 @@ namespace LedgerCore.Api.Features.Auth
             group.MapPost("refresh", async (RefreshToken.Command command, ISender sender) =>
             {
                 var result = await sender.Send(command);
-                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.Problem(result.Error, statusCode: StatusCodes.Status401Unauthorized);
             })
              .WithName("Refresh")
               .WithSummary("Refresh access and refresh tokens")

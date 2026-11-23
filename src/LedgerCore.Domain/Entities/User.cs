@@ -43,7 +43,7 @@ namespace LedgerCore.Domain.Entities
 
         public void SetLastLoginNow()
         {
-            LastLogin = DateTime.Now;
+            LastLogin = DateTime.UtcNow;
         }
 
         public void UpdateProfilePhotoUrl(string profilePhotoUrl)

@@ -6,7 +6,7 @@ namespace LedgerCore.Domain.Exceptions
 {
     public class AccountNotFoundException : DomainException
     {
-        public AccountNotFoundException(Guid accountId) : base($"Account with ID: {accountId} was not found")
+        public AccountNotFoundException(Guid accountId) : base($"Nie znaleziono konta o id: {accountId}")
         {
 
         }

@@ -11,7 +11,7 @@ namespace LedgerCore.Application.Features.Auth.Commands.Login
     {
         public record Command(string Email, string Password) : IRequest<Result<Response>>;
         public record Response(Guid UserId,string AccessToken,string RefreshToken);
-        public class Handler(ILoginUserService loginService,ITokenService tokenService) : IRequestHandler<Command, Result<Response>>
+        public class Handler(ILoginUserService loginService, ITokenService tokenService, Microsoft.Extensions.Options.IOptions<LedgerCore.Application.Common.Settings.AuthOptions> authOptions) : IRequestHandler<Command, Result<Response>>
         {
             public async Task<Result<Response>> Handle(Command request, CancellationToken cancellationToken)
             {
@@ -22,10 +22,11 @@ namespace LedgerCore.Application.Features.Auth.Commands.Login
                     return Result.Failure<Response>(result.Error);
                 }
                 var user = result.Value;
+                var requireVerification = authOptions.Value.RequireEmailVerification;
 
-                if (!user.EmailConfirmed)
+                if (requireVerification && !user.EmailConfirmed)
                 {
-                    return Result.Failure<Response>("User email is not verified");
+                    return Result.Failure<Response>("Adres e-mail nie został zweryfikowany");
                 }
 
                 var userRoles = await loginService.GetUserRoles(user);

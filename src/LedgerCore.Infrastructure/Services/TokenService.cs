@@ -83,11 +83,12 @@ namespace LedgerCore.Infrastructure.Services
             // 2. Weryfikacja
             if (storedToken == null || storedToken.IsRevoked || storedToken.IsExpired())
             {
-                throw new Exception("Invalid or expired refresh token");
+                throw new UnauthorizedAccessException("Sesja wygasła, zaloguj się ponownie");
             }
 
             // 3. Pobieramy użytkownika
             var user = await appDbContext.Users.FindAsync(storedToken.UserId);
+            if (user == null || !user.IsActive || user.IsDeleted) throw new UnauthorizedAccessException("Konto jest nieaktywne");
 
             var userRoles = await identityService.GetUserRoles(user.Id);
             storedToken.Revoke();

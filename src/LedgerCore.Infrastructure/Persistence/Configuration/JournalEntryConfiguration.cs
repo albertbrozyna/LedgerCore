@@ -1,10 +1,6 @@
-﻿using LedgerCore.Domain.Entities;
+using LedgerCore.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Reflection.Emit;
-using System.Text;
 
 namespace LedgerCore.Infrastructure.Persistence.Configuration
 {
@@ -12,9 +8,9 @@ namespace LedgerCore.Infrastructure.Persistence.Configuration
     {
         public void Configure(EntityTypeBuilder<JournalEntry> builder)
         {
-         builder
-        .Property(e => e.Amount)
-        .HasPrecision(18, 2); // 18 cyfr, 2 po przecinku
+            builder.Property(e => e.Amount).HasPrecision(18, 2);
+            builder.HasOne(e => e.Account).WithMany().HasForeignKey(e => e.AccountId).OnDelete(DeleteBehavior.Restrict);
+            builder.HasIndex(e => e.AccountId);
         }
     }
 }

@@ -7,13 +7,13 @@ namespace LedgerCore.Domain.Exceptions
     {
         // Konstruktor przyjmujący kwotę, która spowodowała wyjątek
         public NegativeAmountException(decimal amount)
-            : base($"Negative amount is not allowed: {amount}")
+            : base($"Kwota musi być większa od zera (podano: {amount})")
         {
         }
 
         // Opcjonalny konstruktor bez argumentów
         public NegativeAmountException()
-            : base("Negative amount is not allowed.")
+            : base("Kwota musi być większa od zera.")
         {
         }
     }

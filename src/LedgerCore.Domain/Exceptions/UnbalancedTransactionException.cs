@@ -6,7 +6,7 @@ namespace LedgerCore.Domain.Exceptions
 {
     public class UnbalancedTransactionException : DomainException
     {
-        public UnbalancedTransactionException(decimal debit,decimal credit) : base($"Unbalanced transaction! sum WN: {debit}, sum MA:{credit} ")
+        public UnbalancedTransactionException(decimal debit,decimal credit) : base($"Księgowanie nie jest zbilansowane: suma Winien = {debit:0.00}, suma Ma = {credit:0.00}")
         {
 
         }

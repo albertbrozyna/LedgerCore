@@ -1,37 +1,36 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
+using LedgerCore.Domain.Exceptions;
+using Microsoft.AspNetCore.Diagnostics;
 
 namespace LedgerCore.Api.Infrastructure
 {
-    public class GlobalExceptionHandler(IProblemDetailsService problemDetailsService) : IExceptionHandler
+    public class GlobalExceptionHandler(IProblemDetailsService problemDetailsService, ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
     {
         public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
         {
-            var statusCode = exception switch
+            var (statusCode, title) = exception switch
             {
-                ApplicationException => StatusCodes.Status400BadRequest,
-                BadHttpRequestException => StatusCodes.Status400BadRequest,
-
-                _ => StatusCodes.Status500InternalServerError
+                UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Brak autoryzacji"),
+                DomainException => (StatusCodes.Status400BadRequest, "Operacja niedozwolona"),
+                ArgumentException => (StatusCodes.Status400BadRequest, "Nieprawidłowe dane"),
+                BadHttpRequestException => (StatusCodes.Status400BadRequest, "Nieprawidłowe żądanie"),
+                _ => (StatusCodes.Status500InternalServerError, "Wystąpił nieoczekiwany błąd")
             };
 
-            httpContext.Response.StatusCode = statusCode;
+            if (statusCode == 500) logger.LogError(exception, "Nieobsłużony wyjątek");
 
-            var problemDetailsContext = new ProblemDetailsContext
+            httpContext.Response.StatusCode = statusCode;
+            await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
             {
                 HttpContext = httpContext,
                 Exception = exception,
-                ProblemDetails = {
-                    Title = "An exception occcured while processing exception",
-                    Detail = exception.Message,
-                    Type = exception.GetType().Name,
+                ProblemDetails =
+                {
+                    Title = title,
+                    // Szczegóły błędów 500 nie wyciekają do klienta
+                    Detail = statusCode == 500 ? "Sprawdź logi aplikacji." : exception.Message,
                     Status = statusCode
                 }
-            };
-
-            await problemDetailsService.TryWriteAsync(problemDetailsContext);
-
-
+            });
             return true;
         }
     }

@@ -17,7 +17,7 @@ namespace LedgerCore.Api.Features.Auth
             group.MapPost("verify", async (VerifyEmail.Command command, ISender sender) =>
             {
                 var result = await sender.Send(command);
-                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.Problem(result.Error, statusCode: StatusCodes.Status400BadRequest);
             })
              .WithName("Verify emails")
               .WithSummary("Verify user email")
