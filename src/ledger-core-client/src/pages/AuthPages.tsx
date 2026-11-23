@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../auth'
-import { ErrorBox } from '../ui'
+import { Button, ErrorBox } from '../design'
 
 export function SetupPage() {
   const { login } = useAuth()
@@ -42,7 +42,7 @@ export function SetupPage() {
         <label>E-mail<input type="email" value={f.email} onChange={set('email')} required /></label>
         <label>Hasło (min. 8 znaków, w tym cyfra)<input type="password" value={f.password} onChange={set('password')} required /></label>
         <label>Powtórz hasło<input type="password" value={f.password2} onChange={set('password2')} required /></label>
-        <button className="btn btn-primary" disabled={busy}>{busy ? 'Tworzenie…' : 'Utwórz konto administratora'}</button>
+        <Button variant="primary"  disabled={busy}>{busy ? 'Tworzenie…' : 'Utwórz konto administratora'}</Button>
       </form>
     </div>
   )
@@ -76,7 +76,7 @@ export function LoginPage() {
         <ErrorBox message={error} />
         <label>E-mail<input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus /></label>
         <label>Hasło<input type="password" value={password} onChange={e => setPassword(e.target.value)} required /></label>
-        <button className="btn btn-primary" disabled={busy}>{busy ? 'Logowanie…' : 'Zaloguj'}</button>
+        <Button variant="primary"  disabled={busy}>{busy ? 'Logowanie…' : 'Zaloguj'}</Button>
       </form>
     </div>
   )

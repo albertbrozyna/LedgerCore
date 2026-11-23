@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { ADMIN, loginOk, squash } from './helpers'
+import { ADMIN, loginOk, squash, confirmDialog } from './helpers'
 
 const THIS_YEAR = new Date().getFullYear()
 
@@ -94,9 +94,9 @@ test.describe.serial('Dane firmy, wydruki, bilans, eksporty i zamknięcie roku',
     expect(before).not.toBe('0,00')
 
     await page.goto('/admin')
-    page.once('dialog', d => d.accept())
     await page.getByLabel('Rok', { exact: true }).fill(String(THIS_YEAR))
     await page.getByRole('button', { name: 'Zamknij rok' }).click()
+    await confirmDialog(page)
     await expect(page.getByRole('status')).toContainText(`Zamknięto rok ${THIS_YEAR}`)
     await expect(page.getByTestId('lock-status')).toContainText(`${THIS_YEAR}-12-31`)
 
@@ -117,8 +117,8 @@ test.describe.serial('Dane firmy, wydruki, bilans, eksporty i zamknięcie roku',
     // drugi raz nie można, a księgowanie w zamkniętym roku jest zablokowane
     await page.goto('/admin')
     await page.getByLabel('Rok', { exact: true }).fill(String(THIS_YEAR))
-    page.once('dialog', d => d.accept())
     await page.getByRole('button', { name: 'Zamknij rok' }).click()
+    await confirmDialog(page)
     await expect(page.getByRole('alert')).toContainText('został już zamknięty')
 
     const token = await page.evaluate(() => localStorage.getItem('lc.access'))

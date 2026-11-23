@@ -43,7 +43,7 @@ public class Transaction : ICompanyOwned
             throw new DomainValidationException("Kwoty mogą mieć maksymalnie 2 miejsca po przecinku");
 
         var entry = new JournalEntry(accountId, amount, side);
-        entry.AssignToTransaction(Id);
+        entry.AssignToTransaction(Id, Date, Number.StartsWith("ZR/", StringComparison.Ordinal));
         _entries.Add(entry);
     }
 

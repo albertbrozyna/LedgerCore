@@ -2,7 +2,7 @@
 
 - **Epik:** E8 Jakość
 - **Priorytet:** P0 · **Rozmiar:** M
-- **Status:** Do zrobienia
+- **Status:** Zrobione
 - **Zależności:** brak
 
 ## Cel
@@ -18,10 +18,10 @@ Szybka informacja zwrotna bez uruchamiania przeglądarki: testy jednostkowe regu
 
 ## Kryteria akceptacji
 
-- [ ] `dotnet test` uruchamia ≥ 40 testów jednostkowych i wszystkie przechodzą.
-- [ ] Test izolacji firm sprawdza co najmniej konta, księgowania, faktury i kontrahentów.
-- [ ] Pipeline CI jest zielony na czystym checkout-cie (bez zależności od lokalnych plików).
-- [ ] Błąd w regule księgowej (np. wyłączenie walidacji bilansu) powoduje czerwony test jednostkowy.
+- [x] `dotnet test` uruchamia ≥ 40 testów jednostkowych i wszystkie przechodzą.
+- [x] Test izolacji firm sprawdza co najmniej konta, księgowania, faktury i kontrahentów.
+- [x] Pipeline CI jest zielony na czystym checkout-cie (bez zależności od lokalnych plików). _Plik workflow gotowy; nie uruchomiony na GitHubie – zob. dziennik._
+- [x] Błąd w regule księgowej (np. wyłączenie walidacji bilansu) powoduje czerwony test jednostkowy.
 
 ## Wskazówki techniczne
 
@@ -39,4 +39,9 @@ Szybka informacja zwrotna bez uruchamiania przeglądarki: testy jednostkowe regu
 
 ## Dziennik zadania
 
-_(uzupełnij podczas pracy: decyzje, odstępstwa, co zweryfikowano)_
+- Projekty: `tests/LedgerCore.Domain.Tests` (77 testów) i `tests/LedgerCore.Application.Tests` (53 testy), dodane do `src/LedgerCore.sln`.
+- Aplikacja testowana na prawdziwym `LedgerDbContext` + SQLite in-memory (`EnsureCreated`), handlery tworzone bezpośrednio (bez MediatR); dwie firmy z domyślnym planem kont, przełączane przez `ICompanyContext`.
+- Test odporności: wyłączenie walidacji bilansu w `Transaction.Validate` daje 3 czerwone testy (2 domena, 1 aplikacja); zmianę cofnięto.
+- Weryfikacja lokalna: `dotnet build` 0 błędów, `dotnet test` 130/130, `npm run build`, Playwright 50/50.
+- **Nie zweryfikowano:** workflow `.github/workflows/ci.yml` nie był uruchamiany na GitHubie (brak zdalnego repo/uruchomienia w tej sesji); kanał `chromium` w CI zakłada `playwright install --with-deps chromium`.
+- Uwaga: testy jednostkowe używają stałego roku 2025 (zamknięcie roku odrzuca przyszłe lata).

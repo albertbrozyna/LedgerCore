@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { ACCOUNTANT, ADMIN, VIEWER, accessToken, login, loginOk, logout, postTransaction } from './helpers'
+import { ACCOUNTANT, ADMIN, VIEWER, accessToken, login, loginOk, logout, postTransaction, answerPrompt } from './helpers'
 
 const today = new Date().toISOString().slice(0, 10)
 
@@ -98,8 +98,8 @@ test.describe.serial('Użytkownicy i uprawnienia', () => {
   test('reset hasła przez administratora i kopia zapasowa bazy', async ({ page }) => {
     await loginOk(page, ADMIN)
     await page.goto('/users')
-    page.once('dialog', d => d.accept('NoweHaslo99'))
     await page.getByRole('row', { name: new RegExp(ACCOUNTANT.email) }).getByRole('button', { name: 'Zmień hasło' }).click()
+    await answerPrompt(page, 'NoweHaslo99')
     await expect(page.getByRole('status')).toContainText('Zmieniono hasło')
 
     const [download] = await Promise.all([

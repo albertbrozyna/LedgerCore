@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { ADMIN, accessToken, login, loginOk, logout } from './helpers'
+import { ADMIN, accessToken, login, loginOk, logout, confirmDialog } from './helpers'
 
 const iso = (offsetDays = 0) => {
   const d = new Date(); d.setDate(d.getDate() + offsetDays)
@@ -164,8 +164,8 @@ test.describe.serial('Faktury, VAT, rozrachunki, zamknięcie okresu i audyt', ()
     expect(res.status()).toBe(400)
     expect((await res.json()).detail).toContain('anuluj fakturę')
 
-    page.once('dialog', d => d.accept())
     await page.getByRole('button', { name: 'Anuluj fakturę' }).click()
+    await confirmDialog(page)
     await expect(page.getByTestId('invoice-status')).toHaveText('Anulowana')
 
     await page.goto('/reports')

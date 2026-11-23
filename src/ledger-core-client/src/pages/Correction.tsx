@@ -1,9 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { apiC, apiX, type InvoiceDetail, type VatRate } from '../api'
+import { api, type InvoiceDetail, type VatRate } from '../api'
 import { useAuth } from '../auth'
 import { fmtMoney, parseAmount, round2, todayIso, vatPercent, vatRateLabel } from '../format'
-import { ErrorBox, Loading, PageHeader, useLoad } from '../ui'
+import { Button, ErrorBox, Loading, PageHeader, useLoad } from '../design'
 
 const rates = Object.keys(vatRateLabel) as VatRate[]
 
@@ -40,7 +40,7 @@ export function CorrectionPage() {
   const { id } = useParams()
   const { canWrite } = useAuth()
   const nav = useNavigate()
-  const { data, error, loading } = useLoad(() => apiX.invoice(id!), [id])
+  const { data, error, loading } = useLoad(() => api.invoice(id!), [id])
   const [rows, setRows] = useState<Row[]>([])
   const [issueDate, setIssueDate] = useState(todayIso())
   const [reason, setReason] = useState('')
@@ -74,7 +74,7 @@ export function CorrectionPage() {
     if (lines.length === 0) { setFormError('Korekta nie zmienia żadnej pozycji'); return }
     setBusy(true)
     try {
-      const r = await apiC.createCorrection(inv.id, { number: sales ? undefined : number, issueDate, reason, lines })
+      const r = await api.createCorrection(inv.id, { number: sales ? undefined : number, issueDate, reason, lines })
       nav(`/invoices/${r.invoiceId}`)
     } catch (err) { setFormError((err as Error).message) } finally { setBusy(false) }
   }
@@ -115,21 +115,21 @@ export function CorrectionPage() {
                   </td>
                   <td className="num">{fmtMoney(dNet)}</td>
                   <td className="num">{fmtMoney(dVat)}</td>
-                  <td>{r.isNew && <button type="button" className="btn btn-small btn-link" onClick={() => setRows(rows.filter((_, j) => j !== i))}>Usuń</button>}</td>
+                  <td>{r.isNew && <Button variant="link" small type="button"  onClick={() => setRows(rows.filter((_, j) => j !== i))}>Usuń</Button>}</td>
                 </tr>
               )
             })}
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={4}><button type="button" className="btn btn-small" onClick={() => setRows([...rows, { description: '', beforeNet: 0, beforeRate: 'R23', after: '', rate: 'R23', isNew: true }])}>+ Dodaj nową pozycję</button></td>
+              <td colSpan={4}><Button small type="button"  onClick={() => setRows([...rows, { description: '', beforeNet: 0, beforeRate: 'R23', after: '', rate: 'R23', isNew: true }])}>+ Dodaj nową pozycję</Button></td>
               <td className="num" data-testid="corr-net">{fmtMoney(net)}</td>
               <td className="num" data-testid="corr-vat">{fmtMoney(vat)}</td><td></td>
             </tr>
           </tfoot>
         </table>
         <p className="balance" data-testid="corr-gross">Różnica brutto (zmiana należności): <strong>{fmtMoney(round2(net + vat))}</strong></p>
-        <button className="btn btn-primary" disabled={busy || invalid || lines.length === 0}>{busy ? 'Zapisywanie…' : 'Wystaw korektę i zaksięguj'}</button>
+        <Button variant="primary"  disabled={busy || invalid || lines.length === 0}>{busy ? 'Zapisywanie…' : 'Wystaw korektę i zaksięguj'}</Button>
       </form>
     </>
   )

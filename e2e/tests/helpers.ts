@@ -47,3 +47,20 @@ export async function postTransaction(
 export async function accessToken(page: Page) {
   return page.evaluate(() => localStorage.getItem('lc.access'))
 }
+
+/** Potwierdza okno dialogowe aplikacji (zamiennik natywnego `confirm()`); wywołaj po kliknięciu akcji. */
+export async function confirmDialog(page: Page, label?: string) {
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await (label ? dialog.getByRole('button', { name: label }) : dialog.getByRole('button').last()).click() // ostatni = akcja potwierdzająca
+  await expect(dialog).toBeHidden()
+}
+
+/** Wpisuje wartość w oknie dialogowym z polem (zamiennik `prompt()`) i zatwierdza. */
+export async function answerPrompt(page: Page, value: string) {
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await dialog.locator('input').fill(value)
+  await dialog.getByRole('button', { name: 'Zapisz' }).click()
+  await expect(dialog).toBeHidden()
+}

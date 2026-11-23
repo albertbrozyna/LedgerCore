@@ -1,14 +1,14 @@
 import { Link, useParams } from 'react-router-dom'
-import { apiX, apiY } from '../api'
+import { api } from '../api'
 import { fmtDate, fmtMoney, invoiceTypeLabel, vatRateLabel } from '../format'
 import { amountInWords } from '../print'
-import { ErrorBox, Loading, PageHeader, useLoad } from '../ui'
+import { Button, ErrorBox, Loading, PageHeader, useLoad } from '../design'
 
 /** Widok do wydruku / zapisu jako PDF (Ctrl+P → „Zapisz jako PDF”). */
 export function InvoicePrintPage() {
   const { id } = useParams()
-  const inv = useLoad(() => apiX.invoice(id!), [id])
-  const company = useLoad(() => apiY.company(), [])
+  const inv = useLoad(() => api.invoice(id!), [id])
+  const company = useLoad(() => api.company(), [])
   const d = inv.data
   const c = company.data
   const sales = d?.type === 'Sales'
@@ -17,7 +17,7 @@ export function InvoicePrintPage() {
     <>
       <PageHeader title="Podgląd wydruku faktury">
         <Link className="btn" to={`/invoices/${id}`}>← Faktura</Link>
-        <button className="btn btn-primary" onClick={() => window.print()}>Drukuj / zapisz jako PDF</button>
+        <Button variant="primary"  onClick={() => window.print()}>Drukuj / zapisz jako PDF</Button>
       </PageHeader>
       <ErrorBox message={inv.error || company.error} />
       {(inv.loading || company.loading) && !d && <Loading />}
@@ -25,7 +25,7 @@ export function InvoicePrintPage() {
         <div className="invoice-sheet" data-testid="invoice-sheet">
           <div className="invoice-title">
             <h1>{d.isCorrection ? 'Faktura korygująca' : sales ? 'Faktura VAT' : 'Faktura zakupu'} {d.number}</h1>
-            <div style={{ textAlign: 'right' }}>
+            <div className="text-right">
               <div>Data wystawienia: <strong>{fmtDate(d.issueDate)}</strong></div>
               <div>Data sprzedaży: <strong>{fmtDate(d.saleDate)}</strong></div>
               <div>Termin płatności: <strong>{fmtDate(d.dueDate)}</strong></div>

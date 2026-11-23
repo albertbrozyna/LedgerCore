@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { ADMIN, loginOk, postTransaction, squash } from './helpers'
+import { ADMIN, loginOk, postTransaction, squash, confirmDialog } from './helpers'
 
 const today = new Date().toISOString().slice(0, 10)
 
@@ -110,8 +110,8 @@ test.describe.serial('Księgowość: plan kont, księgowania, raporty', () => {
   test('storno odwraca księgowanie, nie kasuje go, i nie można stornować dwa razy', async ({ page }) => {
     await page.goto('/transactions')
     await page.getByRole('row', { name: /Czynsz za biuro/ }).getByRole('link').first().click()
-    page.once('dialog', d => d.accept())
     await page.getByRole('button', { name: 'Storno' }).click()
+    await confirmDialog(page)
     await expect(page.getByRole('heading', { name: /Księgowanie DK/ })).toBeVisible()
     await expect(page.getByText('Storno dokumentu')).toBeVisible()
 

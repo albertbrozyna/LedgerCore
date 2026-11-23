@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
-import { api, apiC, companyStore, setUnauthorizedHandler, tokens, type CompanyListItem, type Role, type UserInfo } from './api'
+import { api, companyStore, setUnauthorizedHandler, tokens, type CompanyListItem, type Role, type UserInfo } from './api'
 
 interface AuthState {
   user: UserInfo | null
@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /** Po zalogowaniu: pobiera firmy użytkownika i wybiera zapamiętaną (lub pierwszą dostępną). */
   const loadCompanies = useCallback(async (saved: string | null) => {
-    const list = await apiC.myCompanies()
+    const list = await api.myCompanies()
     const chosen = list.find(c => c.id === saved) ?? list[0]
     if (chosen) companyStore.set(chosen.id)
     setCompanies(list)

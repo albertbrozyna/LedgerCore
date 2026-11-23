@@ -1,15 +1,19 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { api, apiX, apiY, type InvoiceType } from '../api'
+import { api, type InvoiceType } from '../api'
 import { downloadCsv } from '../print'
 import { accountTypeLabel, fmtDate, fmtMoney, fmtMoneyOrDash, invoiceTypeLabel, monthStartIso, todayIso, vatRateLabel, yearStartIso } from '../format'
-import { ErrorBox, Loading, PageHeader, PrintHeader, useLoad } from '../ui'
+import { Button, ErrorBox, Loading, PageHeader, PrintHeader, Tabs, useLoad } from '../design'
+
+const LEDGER_PAGE_SIZE = 100
 
 export function LedgerPage() {
   const { id } = useParams()
   const [from, setFrom] = useState(yearStartIso())
   const [to, setTo] = useState('')
-  const { data, error, loading } = useLoad(() => api.ledger(id!, from, to), [id, from, to])
+  const [page, setPage] = useState(1)
+  const { data, error, loading } = useLoad(() => api.ledger(id!, from, to, page, LEDGER_PAGE_SIZE), [id, from, to, page])
+  const pages = data ? Math.max(1, Math.ceil(data.totalCount / data.pageSize)) : 1
 
   return (
     <>
@@ -18,11 +22,12 @@ export function LedgerPage() {
       </PageHeader>
       <ErrorBox message={error} />
       <div className="card form-row">
-        <label>Od<input type="date" value={from} onChange={e => setFrom(e.target.value)} /></label>
-        <label>Do<input type="date" value={to} onChange={e => setTo(e.target.value)} /></label>
+        <label>Od<input type="date" value={from} onChange={e => { setFrom(e.target.value); setPage(1) }} /></label>
+        <label>Do<input type="date" value={to} onChange={e => { setTo(e.target.value); setPage(1) }} /></label>
       </div>
       {loading && !data && <Loading />}
       {data && (
+        <>
         <table>
           <thead><tr><th>Data</th><th>Dokument</th><th>Opis</th><th className="num">Winien</th><th className="num">Ma</th><th className="num">Saldo</th></tr></thead>
           <tbody>
@@ -44,6 +49,14 @@ export function LedgerPage() {
               <td className="num" data-testid="ledger-closing">{fmtMoney(data.closingBalance)}</td></tr>
           </tfoot>
         </table>
+        {pages > 1 && (
+          <div className="pager">
+            <Button small disabled={page <= 1} onClick={() => setPage(page - 1)}>‹ Poprzednia</Button>
+            <span>Strona {page} z {pages} ({data.totalCount} zapisów)</span>
+            <Button small disabled={page >= pages} onClick={() => setPage(page + 1)}>Następna ›</Button>
+          </div>
+        )}
+        </>
       )}
     </>
   )
@@ -58,20 +71,16 @@ export function ReportsPage() {
 
   return (
     <>
-      <PageHeader title="Raporty"><button className="btn" onClick={() => window.print()}>Drukuj / PDF</button></PageHeader>
+      <PageHeader title="Raporty"><Button  onClick={() => window.print()}>Drukuj / PDF</Button></PageHeader>
       <PrintHeader title={tabTitle[tab]} period={tab === 'bs' ? `na dzień ${to}` : tab === 'settle' ? undefined : `${from} – ${to}`} />
-      <div className="tabs no-print" role="tablist">
-        <button role="tab" aria-selected={tab === 'tb'} className={tab === 'tb' ? 'active' : ''} onClick={() => setTab('tb')}>Zestawienie obrotów i sald</button>
-        <button role="tab" aria-selected={tab === 'pnl'} className={tab === 'pnl' ? 'active' : ''} onClick={() => setTab('pnl')}>Rachunek wyników</button>
-        <button role="tab" aria-selected={tab === 'bs'} className={tab === 'bs' ? 'active' : ''} onClick={() => setTab('bs')}>Bilans</button>
-        <button role="tab" aria-selected={tab === 'vat'} className={tab === 'vat' ? 'active' : ''} onClick={() => setTab('vat')}>Rejestry VAT</button>
-        <button role="tab" aria-selected={tab === 'settle'} className={tab === 'settle' ? 'active' : ''} onClick={() => setTab('settle')}>Rozrachunki</button>
-      </div>
+      <div className="no-print"><Tabs label="Rodzaj raportu" value={tab} onChange={setTab} tabs={[
+        { value: 'tb', label: 'Zestawienie obrotów i sald' }, { value: 'pnl', label: 'Rachunek wyników' }, { value: 'bs', label: 'Bilans' },
+        { value: 'vat', label: 'Rejestry VAT' }, { value: 'settle', label: 'Rozrachunki' }]} /></div>
       <div className="card form-row">
         <label>Od<input type="date" value={from} onChange={e => setFrom(e.target.value)} /></label>
         <label>Do<input type="date" value={to} onChange={e => setTo(e.target.value)} /></label>
-        <button className="btn btn-small" onClick={() => { setFrom(monthStartIso()); setTo(todayIso()) }}>Ten miesiąc</button>
-        <button className="btn btn-small" onClick={() => { setFrom(yearStartIso()); setTo(todayIso()) }}>Ten rok</button>
+        <Button small  onClick={() => { setFrom(monthStartIso()); setTo(todayIso()) }}>Ten miesiąc</Button>
+        <Button small  onClick={() => { setFrom(yearStartIso()); setTo(todayIso()) }}>Ten rok</Button>
       </div>
       {tab === 'tb' && <TrialBalance from={from} to={to} />}
       {tab === 'pnl' && <Pnl from={from} to={to} />}
@@ -87,9 +96,9 @@ function TrialBalance({ from, to }: { from: string; to: string }) {
   return (
     <>
       <ErrorBox message={error} />
-      {data && data.rows.length > 0 && <div className="no-print"><button className="btn btn-small" onClick={() => downloadCsv('obroty-i-salda.csv',
+      {data && data.rows.length > 0 && <div className="no-print"><Button small  onClick={() => downloadCsv('obroty-i-salda.csv',
         ['Konto', 'Nazwa', 'BO Wn', 'BO Ma', 'Obroty Wn', 'Obroty Ma', 'BZ Wn', 'BZ Ma'],
-        data.rows.map(r => [r.code, r.name, Math.max(r.opening, 0), Math.max(-r.opening, 0), r.debitTurnover, r.creditTurnover, Math.max(r.closing, 0), Math.max(-r.closing, 0)]))}>Eksport CSV</button></div>}
+        data.rows.map(r => [r.code, r.name, Math.max(r.opening, 0), Math.max(-r.opening, 0), r.debitTurnover, r.creditTurnover, Math.max(r.closing, 0), Math.max(-r.closing, 0)]))}>Eksport CSV</Button></div>}
       {loading && !data && <Loading />}
       {data && (data.rows.length === 0 ? <p className="muted">Brak obrotów w wybranym okresie.</p> : (
         <table>
@@ -123,9 +132,9 @@ function Pnl({ from, to }: { from: string; to: string }) {
   return (
     <>
       <ErrorBox message={error} />
-      {data && <div className="no-print"><button className="btn btn-small" onClick={() => downloadCsv('rachunek-wynikow.csv', ['Pozycja', 'Konto', 'Nazwa', 'Kwota'],
+      {data && <div className="no-print"><Button small  onClick={() => downloadCsv('rachunek-wynikow.csv', ['Pozycja', 'Konto', 'Nazwa', 'Kwota'],
         [...data.income.map(r => ['Przychody', r.code, r.name, r.amount] as (string | number)[]), ['Przychody', '', 'RAZEM', data.totalIncome],
-         ...data.expenses.map(r => ['Koszty', r.code, r.name, r.amount] as (string | number)[]), ['Koszty', '', 'RAZEM', data.totalExpenses], ['Wynik', '', 'WYNIK FINANSOWY', data.result]])}>Eksport CSV</button></div>}
+         ...data.expenses.map(r => ['Koszty', r.code, r.name, r.amount] as (string | number)[]), ['Koszty', '', 'RAZEM', data.totalExpenses], ['Wynik', '', 'WYNIK FINANSOWY', data.result]])}>Eksport CSV</Button></div>}
       {loading && !data && <Loading />}
       {data && (
         <table>
@@ -146,15 +155,15 @@ function Pnl({ from, to }: { from: string; to: string }) {
 
 function Vat({ from, to }: { from: string; to: string }) {
   const [type, setType] = useState<InvoiceType>('Sales')
-  const summary = useLoad(() => apiX.vatSummary(from, to), [from, to])
-  const reg = useLoad(() => apiX.vatRegister(type, from, to), [type, from, to])
+  const summary = useLoad(() => api.vatSummary(from, to), [from, to])
+  const reg = useLoad(() => api.vatRegister(type, from, to), [type, from, to])
   const s = summary.data
   return (
     <>
       <ErrorBox message={summary.error || reg.error} />
-      {reg.data && reg.data.rows.length > 0 && <div className="no-print"><button className="btn btn-small" onClick={() => downloadCsv(type === 'Sales' ? 'rejestr-vat-sprzedazy.csv' : 'rejestr-vat-zakupow.csv',
+      {reg.data && reg.data.rows.length > 0 && <div className="no-print"><Button small  onClick={() => downloadCsv(type === 'Sales' ? 'rejestr-vat-sprzedazy.csv' : 'rejestr-vat-zakupow.csv',
         ['Numer', 'Data wystawienia', 'Data sprzedazy', 'Kontrahent', 'NIP', 'Netto', 'VAT', 'Brutto'],
-        reg.data!.rows.map(r => [r.number, r.issueDate.slice(0, 10), r.saleDate.slice(0, 10), r.contractorName, r.nip ?? '', r.net, r.vat, r.gross]))}>Eksport rejestru CSV</button></div>}
+        reg.data!.rows.map(r => [r.number, r.issueDate.slice(0, 10), r.saleDate.slice(0, 10), r.contractorName, r.nip ?? '', r.net, r.vat, r.gross]))}>Eksport rejestru CSV</Button></div>}
       {s && (
         <div className="tiles">
           <div className="tile"><div className="tile-label">VAT należny (sprzedaż)</div><div className="tile-value" data-testid="vat-output">{fmtMoney(s.outputVat)}</div></div>
@@ -166,13 +175,7 @@ function Vat({ from, to }: { from: string; to: string }) {
         </div>
       )}
       <h2>Rejestr VAT</h2>
-      <div className="tabs" role="tablist" aria-label="Rodzaj rejestru">
-        {(['Sales', 'Purchase'] as InvoiceType[]).map(t => (
-          <button key={t} role="tab" aria-selected={type === t} className={type === t ? 'active' : ''} onClick={() => setType(t)}>
-            Rejestr {t === 'Sales' ? 'sprzedaży' : 'zakupów'}
-          </button>
-        ))}
-      </div>
+      <Tabs label="Rodzaj rejestru" value={type} onChange={setType} tabs={[{ value: 'Sales', label: 'Rejestr sprzedaży' }, { value: 'Purchase', label: 'Rejestr zakupów' }]} />
       {reg.loading && !reg.data && <Loading />}
       {reg.data && (reg.data.rows.length === 0 ? <p className="muted">Brak faktur ({invoiceTypeLabel[type].toLowerCase()}) w wybranym okresie.</p> : (
         <>
@@ -202,17 +205,14 @@ function Vat({ from, to }: { from: string; to: string }) {
 
 function SettlementsReport() {
   const [type, setType] = useState<InvoiceType>('Sales')
-  const { data, error, loading } = useLoad(() => apiX.settlements(type), [type])
+  const { data, error, loading } = useLoad(() => api.settlements(type), [type])
   return (
     <>
       <ErrorBox message={error} />
-      {data && data.rows.length > 0 && <div className="no-print"><button className="btn btn-small" onClick={() => downloadCsv(type === 'Sales' ? 'naleznosci.csv' : 'zobowiazania.csv',
+      {data && data.rows.length > 0 && <div className="no-print"><Button small  onClick={() => downloadCsv(type === 'Sales' ? 'naleznosci.csv' : 'zobowiazania.csv',
         ['Kontrahent', 'NIP', 'Razem', 'W terminie', '1-30 dni', '31-60 dni', '>60 dni'],
-        data.rows.map(r => [r.contractorName, r.nip ?? '', r.total, r.notDue, r.days1To30, r.days31To60, r.over60]))}>Eksport CSV</button></div>}
-      <div className="tabs" role="tablist" aria-label="Rodzaj rozrachunków">
-        <button role="tab" aria-selected={type === 'Sales'} className={type === 'Sales' ? 'active' : ''} onClick={() => setType('Sales')}>Należności</button>
-        <button role="tab" aria-selected={type === 'Purchase'} className={type === 'Purchase' ? 'active' : ''} onClick={() => setType('Purchase')}>Zobowiązania</button>
-      </div>
+        data.rows.map(r => [r.contractorName, r.nip ?? '', r.total, r.notDue, r.days1To30, r.days31To60, r.over60]))}>Eksport CSV</Button></div>}
+      <Tabs label="Rodzaj rozrachunków" value={type} onChange={setType} tabs={[{ value: 'Sales', label: 'Należności' }, { value: 'Purchase', label: 'Zobowiązania' }]} />
       {loading && !data && <Loading />}
       {data && (data.rows.length === 0 ? <p className="muted">Brak nieuregulowanych dokumentów.</p> : (
         <table>
@@ -235,7 +235,7 @@ function SettlementsReport() {
 }
 
 function Balance({ asOf }: { asOf: string }) {
-  const { data, error, loading } = useLoad(() => apiY.balanceSheet(asOf), [asOf])
+  const { data, error, loading } = useLoad(() => api.balanceSheet(asOf), [asOf])
   const section = (title: string, rows: { accountId: string; code: string; name: string; amount: number }[]) => (
     <>
       <tr className="section"><td colSpan={2}>{title}</td></tr>
@@ -248,11 +248,11 @@ function Balance({ asOf }: { asOf: string }) {
       {loading && !data && <Loading />}
       {data && (
         <>
-          <div className="no-print"><button className="btn btn-small" onClick={() => downloadCsv('bilans.csv', ['Strona', 'Konto', 'Nazwa', 'Kwota'], [
+          <div className="no-print"><Button small  onClick={() => downloadCsv('bilans.csv', ['Strona', 'Konto', 'Nazwa', 'Kwota'], [
             ...data.assets.map(r => ['Aktywa', r.code, r.name, r.amount] as (string | number)[]),
             ...data.liabilities.map(r => ['Zobowiazania', r.code, r.name, r.amount] as (string | number)[]),
             ...data.equity.map(r => ['Kapital', r.code, r.name, r.amount] as (string | number)[]),
-            ['Kapital', '', 'Wynik biezacy', data.currentResult]])}>Eksport CSV</button></div>
+            ['Kapital', '', 'Wynik biezacy', data.currentResult]])}>Eksport CSV</Button></div>
           <div className="balance-grid">
             <table aria-label="Aktywa"><tbody>
               {section('AKTYWA', data.assets)}

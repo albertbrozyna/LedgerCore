@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { api, apiX, apiZ, type AttachmentDto, type InvoiceType, type VatRate } from '../api'
+import { api, type AttachmentDto, type InvoiceType, type VatRate } from '../api'
 import { useAuth } from '../auth'
 import {
   addDaysIso, fmtDate, fmtMoney, invoiceTypeLabel, parseAmount, round2, statusLabel, todayIso, vatPercent, vatRateLabel, yearStartIso,
 } from '../format'
-import { ErrorBox, Loading, Notice, PageHeader, useLoad } from '../ui'
+import { Button, ErrorBox, Loading, Notice, PageHeader, StatusBadge, useDialogs, useLoad } from '../design'
 
 const rates = Object.keys(vatRateLabel) as VatRate[]
 
@@ -19,7 +19,7 @@ export function InvoicesPage() {
   const [page, setPage] = useState(1)
   const contractorId = params.get('contractorId') ?? undefined
   const { data, error, loading } = useLoad(
-    () => apiX.invoices({ type: type || undefined, status, search, from, contractorId, page, pageSize: 20 }),
+    () => api.invoices({ type: type || undefined, status, search, from, contractorId, page, pageSize: 20 }),
     [type, status, search, from, contractorId, page])
   const pages = data ? Math.max(1, Math.ceil(data.totalCount / data.pageSize)) : 1
 
@@ -60,7 +60,7 @@ export function InvoicesPage() {
                   <td>{fmtDate(i.issueDate)}</td><td>{fmtDate(i.dueDate)}</td>
                   <td className="num">{fmtMoney(i.gross)}</td>
                   <td className="num">{i.status === 'canceled' || i.isCorrection ? '' : fmtMoney(i.remaining)}</td>
-                  <td><span className={`badge status-${i.status}`}>{statusLabel[i.status]}</span></td>
+                  <td><StatusBadge status={i.status}>{statusLabel[i.status]}</StatusBadge></td>
                 </tr>
               ))}
             </tbody>
@@ -68,9 +68,9 @@ export function InvoicesPage() {
               <td className="num">{fmtMoney(data.totalGross)}</td><td className="num" data-testid="invoices-remaining">{fmtMoney(data.totalRemaining)}</td><td></td></tr></tfoot>
           </table>
           <div className="pager">
-            <button className="btn btn-small" disabled={page <= 1} onClick={() => setPage(page - 1)}>‹ Poprzednia</button>
+            <Button small  disabled={page <= 1} onClick={() => setPage(page - 1)}>‹ Poprzednia</Button>
             <span>Strona {page} z {pages} ({data.totalCount} faktur)</span>
-            <button className="btn btn-small" disabled={page >= pages} onClick={() => setPage(page + 1)}>Następna ›</button>
+            <Button small  disabled={page>= pages} onClick={() => setPage(page + 1)}>Następna ›</Button>
           </div>
         </>
       ))}
@@ -87,7 +87,7 @@ export function NewInvoicePage() {
   const [params] = useSearchParams()
   const type: InvoiceType = params.get('type') === 'Purchase' ? 'Purchase' : 'Sales'
   const sales = type === 'Sales'
-  const contractors = useLoad(() => apiX.contractors(), [])
+  const contractors = useLoad(() => api.contractors(), [])
   const accounts = useLoad(() => api.accounts(), [])
   const [contractorId, setContractorId] = useState('')
   const [number, setNumber] = useState('')
@@ -114,7 +114,7 @@ export function NewInvoicePage() {
     if (invalid) { setError('Podaj poprawne kwoty netto we wszystkich pozycjach (np. 1234,50)'); return }
     setBusy(true)
     try {
-      const r = await apiX.createInvoice({
+      const r = await api.createInvoice({
         type, number: sales ? undefined : number, contractorId, issueDate, dueDate, notes,
         resultAccountId: resultAccountId || undefined,
         lines: lines.map((l, i) => ({ description: l.description, net: parsed[i].net!, vatRate: l.vatRate })),
@@ -164,14 +164,14 @@ export function NewInvoicePage() {
                   </td>
                   <td className="num">{fmtMoney(v)}</td>
                   <td className="num">{fmtMoney(n + v)}</td>
-                  <td>{lines.length > 1 && <button type="button" className="btn btn-small btn-link" onClick={() => setLines(lines.filter((_, j) => j !== i))}>Usuń</button>}</td>
+                  <td>{lines.length > 1 && <Button variant="link" small type="button"  onClick={() => setLines(lines.filter((_, j) => j !== i))}>Usuń</Button>}</td>
                 </tr>
               )
             })}
           </tbody>
           <tfoot>
             <tr>
-              <td><button type="button" className="btn btn-small" onClick={() => setLines([...lines, emptyLine()])}>+ Dodaj pozycję</button></td>
+              <td><Button small type="button"  onClick={() => setLines([...lines, emptyLine()])}>+ Dodaj pozycję</Button></td>
               <td className="num" data-testid="inv-net">{fmtMoney(net)}</td><td></td>
               <td className="num" data-testid="inv-vat">{fmtMoney(vat)}</td>
               <td className="num" data-testid="inv-gross">{fmtMoney(round2(net + vat))}</td><td></td>
@@ -182,16 +182,17 @@ export function NewInvoicePage() {
           <label className="grow">Uwagi<input value={notes} onChange={e => setNotes(e.target.value)} maxLength={500} /></label>
         </div>
         <p className="muted small">Faktura zostanie zaksięgowana automatycznie ({sales ? 'Wn 201 / Ma przychód + 220 VAT' : 'Wn koszt + 220 VAT / Ma 202'}).</p>
-        <button className="btn btn-primary" disabled={busy || invalid || !contractorId}>{busy ? 'Zapisywanie…' : sales ? 'Wystaw i zaksięguj' : 'Zarejestruj i zaksięguj'}</button>
+        <Button variant="primary"  disabled={busy || invalid || !contractorId}>{busy ? 'Zapisywanie…' : sales ? 'Wystaw i zaksięguj' : 'Zarejestruj i zaksięguj'}</Button>
       </form>
     </>
   )
 }
 
 export function InvoicePage() {
+  const { confirm } = useDialogs()
   const { id } = useParams()
   const { canWrite } = useAuth()
-  const { data, error, loading, reload } = useLoad(() => apiX.invoice(id!), [id])
+  const { data, error, loading, reload } = useLoad(() => api.invoice(id!), [id])
   const accounts = useLoad(() => api.accounts(), [])
   const [actionError, setActionError] = useState('')
   const [notice, setNotice] = useState('')
@@ -200,19 +201,19 @@ export function InvoicePage() {
   const [payAccount, setPayAccount] = useState('')
 
   const cash = accounts.data?.filter(a => a.type === 'Asset') ?? []
-  const attachments = useLoad(() => apiZ.attachments(id!), [id])
+  const attachments = useLoad(() => api.attachments(id!), [id])
 
   async function upload(file: File | undefined) {
     if (!file) return
     setActionError(''); setNotice('')
-    try { await apiZ.uploadAttachment(id!, file); setNotice(`Dodano załącznik ${file.name}`); attachments.reload() }
+    try { await api.uploadAttachment(id!, file); setNotice(`Dodano załącznik ${file.name}`); attachments.reload() }
     catch (err) { setActionError((err as Error).message) }
   }
 
   async function removeAttachment(a: AttachmentDto) {
-    if (!confirm(`Usunąć załącznik „${a.fileName}”?`)) return
+    if (!await confirm({ title: 'Usunąć załącznik?', message: `Plik „${a.fileName}” zostanie usunięty.`, confirmLabel: 'Usuń', danger: true })) return
     setActionError('')
-    try { await apiZ.deleteAttachment(a.id); attachments.reload() } catch (err) { setActionError((err as Error).message) }
+    try { await api.deleteAttachment(a.id); attachments.reload() } catch (err) { setActionError((err as Error).message) }
   }
 
   async function pay(e: FormEvent) {
@@ -221,7 +222,7 @@ export function InvoicePage() {
     const amount = parseAmount(payAmount)
     if (amount === null || amount <= 0) { setActionError('Podaj poprawną kwotę płatności'); return }
     try {
-      await apiX.addPayment(id!, { date: payDate, amount, accountId: payAccount })
+      await api.addPayment(id!, { date: payDate, amount, accountId: payAccount })
       setNotice(`Zarejestrowano płatność ${fmtMoney(amount)}`)
       setPayAmount('')
       reload()
@@ -229,9 +230,9 @@ export function InvoicePage() {
   }
 
   async function cancel() {
-    if (!confirm('Anulować fakturę? Zostanie zaksięgowane storno.')) return
+    if (!await confirm({ title: 'Anulować fakturę?', message: 'Zostanie zaksięgowane storno. Tej operacji nie można cofnąć.', confirmLabel: 'Anuluj fakturę', danger: true })) return
     setActionError(''); setNotice('')
-    try { await apiX.cancelInvoice(id!); setNotice('Faktura została anulowana'); reload() }
+    try { await api.cancelInvoice(id!); setNotice('Faktura została anulowana'); reload() }
     catch (err) { setActionError((err as Error).message) }
   }
 
@@ -241,7 +242,7 @@ export function InvoicePage() {
         <Link className="btn" to="/invoices">← Faktury</Link>
         <Link className="btn" to={`/invoices/${id}/print`}>Drukuj / PDF</Link>
         {canWrite && data && !data.isCorrection && data.status !== 'canceled' && <Link className="btn" to={`/invoices/${id}/correction`}>Wystaw korektę</Link>}
-        {canWrite && data && data.status !== 'canceled' && data.paidAmount === 0 && <button className="btn btn-danger" onClick={cancel}>Anuluj fakturę</button>}
+        {canWrite && data && data.status !== 'canceled' && data.paidAmount === 0 && <Button variant="danger"  onClick={cancel}>Anuluj fakturę</Button>}
       </PageHeader>
       <ErrorBox message={error || actionError} />
       <Notice message={notice} />
@@ -254,7 +255,7 @@ export function InvoicePage() {
               <dt>Kontrahent</dt><dd>{data.contractorName}{data.contractorNip ? ` (NIP ${data.contractorNip})` : ''}</dd>
               <dt>Data wystawienia</dt><dd>{fmtDate(data.issueDate)}</dd>
               <dt>Termin płatności</dt><dd>{fmtDate(data.dueDate)}</dd>
-              <dt>Status</dt><dd data-testid="invoice-status"><span className={`badge status-${data.status}`}>{statusLabel[data.status]}</span></dd>
+              <dt>Status</dt><dd data-testid="invoice-status"><StatusBadge status={data.status}>{statusLabel[data.status]}</StatusBadge></dd>
               {data.transactionId && <><dt>Księgowanie</dt><dd><Link to={`/transactions/${data.transactionId}`}>{data.transactionNumber}</Link></dd></>}
               {data.notes && <><dt>Uwagi</dt><dd>{data.notes}</dd></>}
             </dl>
@@ -300,9 +301,9 @@ export function InvoicePage() {
           <ul className="attachments" aria-label="Załączniki">
             {attachments.data?.map(a => (
               <li key={a.id}>
-                <button className="btn btn-link" onClick={() => apiZ.downloadAttachment(a).catch(e => setActionError(e.message))}>{a.fileName}</button>
+                <Button variant="link"  onClick={() => api.downloadAttachment(a).catch(e => setActionError(e.message))}>{a.fileName}</Button>
                 <span className="muted small">{(a.size / 1024).toFixed(0)} KB</span>
-                {canWrite && <button className="btn btn-small btn-link" onClick={() => removeAttachment(a)}>Usuń</button>}
+                {canWrite && <Button variant="link" small  onClick={() => removeAttachment(a)}>Usuń</Button>}
               </li>
             ))}
           </ul>
@@ -319,8 +320,8 @@ export function InvoicePage() {
                   {cash.map(a => <option key={a.id} value={a.id}>{a.code} {a.name}</option>)}
                 </select>
               </label>
-              <button type="button" className="btn btn-small" onClick={() => setPayAmount(String(data.remaining).replace('.', ','))}>Cała kwota</button>
-              <button className="btn btn-primary">Zarejestruj płatność</button>
+              <Button small type="button"  onClick={() => setPayAmount(String(data.remaining).replace('.', ','))}>Cała kwota</Button>
+              <Button variant="primary">Zarejestruj płatność</Button>
             </form>
           )}
         </>

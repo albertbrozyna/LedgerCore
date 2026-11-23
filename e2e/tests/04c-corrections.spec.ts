@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
-import { ADMIN, accessToken, loginOk } from './helpers'
+import { ADMIN, accessToken, loginOk, confirmDialog } from './helpers'
 
 const iso = (offsetDays = 0) => {
   const d = new Date(); d.setDate(d.getDate() + offsetDays)
@@ -136,21 +136,21 @@ test.describe.serial('Faktury korygujące', () => {
     // oryginału z aktywną korektą nie można anulować
     await page.goto(`/invoices/${inv.invoiceId}`)
     await expect(page.getByTestId('invoice-remaining')).toHaveText(/184,50/)
-    page.once('dialog', d => d.accept())
     await page.getByRole('button', { name: 'Anuluj fakturę' }).click()
+    await confirmDialog(page)
     await expect(page.getByRole('alert')).toContainText('anuluj najpierw korekty')
 
     // anulowanie korekty przywraca kwotę do zapłaty
     await page.goto(corrUrl)
-    page.once('dialog', d => d.accept())
     await page.getByRole('button', { name: 'Anuluj fakturę' }).click()
+    await confirmDialog(page)
     await expect(page.getByTestId('invoice-status')).toHaveText('Anulowana')
     await page.goto(`/invoices/${inv.invoiceId}`)
     await expect(page.getByTestId('invoice-remaining')).toHaveText(/123,00/)
 
     // teraz oryginał można anulować
-    page.once('dialog', d => d.accept())
     await page.getByRole('button', { name: 'Anuluj fakturę' }).click()
+    await confirmDialog(page)
     await expect(page.getByTestId('invoice-status')).toHaveText('Anulowana')
   })
 

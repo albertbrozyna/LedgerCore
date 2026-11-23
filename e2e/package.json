@@ -8,6 +8,7 @@
     "build-ui": "npm --prefix ../src/ledger-core-client run build"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.50.0",
     "@types/node": "^24.10.1"
   }

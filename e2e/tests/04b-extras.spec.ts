@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
-import { ACCOUNTANT, ADMIN, accessToken, login, loginOk, logout } from './helpers'
+import { ACCOUNTANT, ADMIN, accessToken, login, loginOk, logout, confirmDialog } from './helpers'
 
 const today = () => {
   const d = new Date()
@@ -106,8 +106,8 @@ test.describe.serial('Kopie zapasowe, konto, załączniki, szablony, import wyci
     await expect(page.getByRole('alert')).toContainText('Dozwolone formaty')
     await expect(list.getByRole('listitem')).toHaveCount(1)
 
-    page.once('dialog', d => d.accept())
     await list.getByRole('button', { name: 'Usuń' }).click()
+    await confirmDialog(page)
     await expect(page.getByText('Brak załączników')).toBeVisible()
 
     // użytkownik bez uprawnień zapisu nie ma uploadu (serwer też odmawia)

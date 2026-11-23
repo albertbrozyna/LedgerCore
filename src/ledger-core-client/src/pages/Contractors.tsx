@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { apiX, type ContractorDto } from '../api'
+import { api, type ContractorDto } from '../api'
 import { useAuth } from '../auth'
 import { fmtMoney, fmtMoneyOrDash } from '../format'
-import { ErrorBox, Loading, Notice, PageHeader, useLoad } from '../ui'
+import { Badge, Button, ErrorBox, Loading, Notice, PageHeader, useLoad } from '../design'
 
 const empty = { name: '', nip: '', address: '', email: '' }
 
@@ -11,7 +11,7 @@ export function ContractorsPage() {
   const { canWrite } = useAuth()
   const [search, setSearch] = useState('')
   const [showInactive, setShowInactive] = useState(false)
-  const { data, error, loading, reload } = useLoad(() => apiX.contractors(search, showInactive), [search, showInactive])
+  const { data, error, loading, reload } = useLoad(() => api.contractors(search, showInactive), [search, showInactive])
   const [editing, setEditing] = useState<ContractorDto | null>(null)
   const [f, setF] = useState(empty)
   const [formError, setFormError] = useState('')
@@ -27,7 +27,7 @@ export function ContractorsPage() {
     e.preventDefault()
     setFormError(''); setNotice('')
     try {
-      await apiX.saveContractor(editing?.id ?? null, { ...f, isActive: editing?.isActive ?? true })
+      await api.saveContractor(editing?.id ?? null, { ...f, isActive: editing?.isActive ?? true })
       setNotice(editing ? `Zapisano zmiany: ${f.name}` : `Dodano kontrahenta ${f.name}`)
       startEdit(null); setNotice(editing ? `Zapisano zmiany: ${f.name}` : `Dodano kontrahenta ${f.name}`)
       reload()
@@ -36,7 +36,7 @@ export function ContractorsPage() {
 
   async function toggle(c: ContractorDto) {
     setFormError('')
-    try { await apiX.saveContractor(c.id, { name: c.name, nip: c.nip ?? '', address: c.address ?? '', email: c.email ?? '', isActive: !c.isActive }); reload() }
+    try { await api.saveContractor(c.id, { name: c.name, nip: c.nip ?? '', address: c.address ?? '', email: c.email ?? '', isActive: !c.isActive }); reload() }
     catch (err) { setFormError((err as Error).message) }
   }
 
@@ -54,8 +54,8 @@ export function ContractorsPage() {
           <label>NIP<input value={f.nip} onChange={e => setF({ ...f, nip: e.target.value })} placeholder="opcjonalnie" /></label>
           <label className="grow">Adres<input value={f.address} onChange={e => setF({ ...f, address: e.target.value })} /></label>
           <label>E-mail<input type="email" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} /></label>
-          <button className="btn btn-primary">{editing ? 'Zapisz zmiany' : 'Dodaj kontrahenta'}</button>
-          {editing && <button type="button" className="btn" onClick={() => startEdit(null)}>Anuluj</button>}
+          <Button variant="primary">{editing ? 'Zapisz zmiany' : 'Dodaj kontrahenta'}</Button>
+          {editing && <Button type="button"  onClick={() => startEdit(null)}>Anuluj</Button>}
         </form>
       )}
 
@@ -70,15 +70,15 @@ export function ContractorsPage() {
           <tbody>
             {data.map(c => (
               <tr key={c.id} className={c.isActive ? '' : 'inactive'}>
-                <td>{c.name}{!c.isActive && <span className="badge"> nieaktywny</span>}</td>
+                <td>{c.name}{!c.isActive && <Badge> nieaktywny</Badge>}</td>
                 <td>{c.nip ?? ''}</td><td>{c.address ?? ''}</td>
                 <td className="num">{fmtMoneyOrDash(c.receivables)}</td>
                 <td className="num">{fmtMoneyOrDash(c.payables)}</td>
                 <td className="actions">
                   <Link to={`/invoices?contractorId=${c.id}`}>Faktury</Link>
                   {canWrite && <>
-                    <button className="btn btn-small btn-link" onClick={() => startEdit(c)}>Edytuj</button>
-                    <button className="btn btn-small btn-link" onClick={() => toggle(c)}>{c.isActive ? 'Dezaktywuj' : 'Aktywuj'}</button>
+                    <Button variant="link" small  onClick={() => startEdit(c)}>Edytuj</Button>
+                    <Button variant="link" small  onClick={() => toggle(c)}>{c.isActive ? 'Dezaktywuj' : 'Aktywuj'}</Button>
                   </>}
                 </td>
               </tr>

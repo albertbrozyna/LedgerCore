@@ -52,3 +52,9 @@ Legenda: ✅ zrobione · ⬜ później · ⛔ zablokowane zewnętrznie
 - ✅ Migracja istniejących danych jednofirmowych do "firmy domyślnej"
 - ⬜ Konsolidacja i raporty zbiorcze po wszystkich firmach
 - ⬜ Kopia/eksport pojedynczej firmy (obecnie kopia obejmuje całą bazę ze wszystkimi firmami)
+
+## Jakość
+- ✅ Testy jednostkowe domeny i aplikacji (xUnit, SQLite w pamięci), w tym izolacja firm
+- ✅ Pipeline CI (GitHub Actions): build, testy jednostkowe, build UI, E2E
+- ✅ Design system: tokeny, ciemny motyw, komponenty bazowe, modale zamiast okien przeglądarki, nawigacja grupowana
+- ✅ Raporty i pulpit liczone w SQL (200 000 zapisów: pulpit ~0,3 s), karta konta ze stronicowaniem

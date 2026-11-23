@@ -1,0 +1,57 @@
+/* Tokeny projektowe LedgerCore. Motyw: domyślnie z systemu (prefers-color-scheme),
+   wymuszany atrybutem data-theme="light" | "dark" na <html> (przełącznik zapamiętany w localStorage). */
+:root {
+  /* odstępy */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px;
+  /* promienie i cienie */
+  --radius-sm: 4px; --radius: 6px; --radius-lg: 8px; --radius-pill: 999px;
+  --shadow-1: 0 1px 2px rgb(16 24 40 / 8%);
+  --shadow-2: 0 8px 28px rgb(16 24 40 / 22%);
+  /* typografia */
+  --font: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --fs-xs: 12px; --fs-sm: 13px; --fs-base: 15px; --fs-md: 16px; --fs-lg: 20px; --fs-xl: 24px;
+
+  color-scheme: light;
+  --bg: #f4f6f9; --surface: #ffffff; --surface-2: #eef2f7; --surface-3: #f8fafc;
+  --text: #1d2733; --muted: #5b6776; --border: #d3dbe4;
+  --primary: #1f5fbf; --primary-hover: #17488f; --on-primary: #ffffff; --focus: #1f5fbf;
+  --danger: #b3261e; --ok: #14692b; --warn: #8f5200;
+  --primary-soft: #e3eefc; --danger-soft: #fdeceb; --ok-soft: #e6f5ea; --warn-soft: #fff3d6; --neutral-soft: #e6ecf5;
+  --danger-border: #f3c0bc; --ok-border: #b9e0c3;
+  --link: #1f5fbf;
+  --sidebar: #1b2634; --sidebar-hover: #243245; --sidebar-text: #d5deea; --sidebar-muted: #a8b7ca;
+  --sidebar-border: #2c3b50; --sidebar-active: #7fb0ff; --sidebar-link: #a9c9ff;
+  --overlay: rgb(10 16 24 / 55%);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0e151e; --surface: #17212d; --surface-2: #1f2c3b; --surface-3: #1a2633;
+  --text: #e6ebf1; --muted: #a0aebe; --border: #33445a;
+  --primary: #6aa5ff; --primary-hover: #8dbaff; --on-primary: #071428; --focus: #8dbaff;
+  --danger: #ff8f86; --ok: #72d791; --warn: #f2b863;
+  --primary-soft: #1b3254; --danger-soft: #3b1f21; --ok-soft: #173424; --warn-soft: #3a2e14; --neutral-soft: #263548;
+  --danger-border: #6b3438; --ok-border: #2d5c40;
+  --link: #8dbaff;
+  --sidebar: #0a1017; --sidebar-hover: #162130; --sidebar-border: #223146;
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 40%);
+  --shadow-2: 0 8px 28px rgb(0 0 0 / 60%);
+  --overlay: rgb(0 0 0 / 65%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #0e151e; --surface: #17212d; --surface-2: #1f2c3b; --surface-3: #1a2633;
+    --text: #e6ebf1; --muted: #a0aebe; --border: #33445a;
+    --primary: #6aa5ff; --primary-hover: #8dbaff; --on-primary: #071428; --focus: #8dbaff;
+    --danger: #ff8f86; --ok: #72d791; --warn: #f2b863;
+    --primary-soft: #1b3254; --danger-soft: #3b1f21; --ok-soft: #173424; --warn-soft: #3a2e14; --neutral-soft: #263548;
+    --danger-border: #6b3438; --ok-border: #2d5c40;
+    --link: #8dbaff;
+    --sidebar: #0a1017; --sidebar-hover: #162130; --sidebar-border: #223146;
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 40%);
+    --shadow-2: 0 8px 28px rgb(0 0 0 / 60%);
+    --overlay: rgb(0 0 0 / 65%);
+  }
+}

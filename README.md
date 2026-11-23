@@ -53,6 +53,21 @@ cd src\ledger-core-client; npm install; npm run dev
 
 Swagger jest dostępny w trybie `Development` pod `/swagger`.
 
+## Testy jednostkowe
+
+Projekty xUnit w `tests\` działają bez przeglądarki i trwają kilka sekund:
+
+- `LedgerCore.Domain.Tests` – reguły domeny (`Transaction`, `Invoice`, NIP, typy kont),
+- `LedgerCore.Application.Tests` – handlery na prawdziwym `LedgerDbContext` i bazie SQLite w pamięci
+  (faktury, płatności, korekty, zamknięcie roku, raporty, izolacja firm).
+
+```powershell
+dotnet test src\LedgerCore.sln
+```
+
+Pipeline CI (`.github\workflows\ci.yml`, Windows) wykonuje: build backendu, testy jednostkowe, build UI i testy E2E
+(Chromium); raport Playwrighta jest zapisywany jako artefakt.
+
 ## Testy end-to-end
 
 Playwright uruchamia prawdziwą aplikację na świeżej bazie (port 5199) i klika po interfejsie: kreator pierwszego

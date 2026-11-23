@@ -20,6 +20,12 @@ public class JournalEntry : ICompanyOwned
 
     // DANE FINANSOWE
     public decimal Amount { get; private set; }
+    /// <summary>Kwota w groszach (całkowita) – pozwala sumować w SQL bez utraty dokładności (SQLite nie sumuje decimal).</summary>
+    public long AmountCents { get; private set; }
+    /// <summary>Data księgowania (kopia z nagłówka) – pozwala filtrować i sumować zapisy bez łączenia tabel.</summary>
+    public DateTime Date { get; private set; }
+    /// <summary>Zapis należy do księgowania zamykającego rok (ZR/…) – pomijany w raportach wyników.</summary>
+    public bool IsClosing { get; private set; }
     public DebitCredit Side { get; private set; }   // Winien czy Ma?
 
     public DateTime CreatedAt { get; private set; }
@@ -35,14 +41,17 @@ public class JournalEntry : ICompanyOwned
         Id = Guid.NewGuid();
         AccountId = accountId;
         Amount = amount;
+        AmountCents = decimal.ToInt64(decimal.Round(amount * 100m, 0));
         Side = side;
         CreatedAt = DateTime.UtcNow;
     }
 
     // Metoda pomocnicza: przypisanie do transakcji
     // (Zadziała tylko raz, gdy dodajemy wpis do transakcji)
-    internal void AssignToTransaction(Guid transactionId)
+    internal void AssignToTransaction(Guid transactionId, DateTime date, bool isClosing)
     {
         TransactionId = transactionId;
+        Date = date.Date;
+        IsClosing = isClosing;
     }
 }

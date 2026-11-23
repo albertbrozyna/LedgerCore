@@ -1,25 +1,26 @@
 import { Fragment, useState, type FormEvent } from 'react'
-import { api, apiC, type Role } from '../api'
+import { api, type Role } from '../api'
 import { useAuth } from '../auth'
 import { fmtDate, roleLabel } from '../format'
-import { ErrorBox, Loading, Notice, PageHeader, useLoad } from '../ui'
+import { Button, ErrorBox, Loading, Notice, PageHeader, useDialogs, useLoad } from '../design'
 
 const roles = Object.keys(roleLabel) as Role[]
 
 export function UsersPage() {
+  const { prompt } = useDialogs()
   const { user: me } = useAuth()
   const { data, error, loading, reload } = useLoad(() => api.users(), [])
   const [f, setF] = useState({ firstName: '', lastName: '', email: '', password: '', role: 'Accountant' as Role })
   const [formError, setFormError] = useState('')
   const [notice, setNotice] = useState('')
   const [backupBusy, setBackupBusy] = useState(false)
-  const companies = useLoad(() => apiC.allCompanies(), [])
+  const companies = useLoad(() => api.allCompanies(), [])
   const [editingCompanies, setEditingCompanies] = useState<string | null>(null)
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([])
 
   async function openCompanies(userId: string) {
     setFormError('')
-    try { setSelectedCompanies(await apiC.userCompanies(userId)); setEditingCompanies(userId) } catch (e) { setFormError((e as Error).message) }
+    try { setSelectedCompanies(await api.userCompanies(userId)); setEditingCompanies(userId) } catch (e) { setFormError((e as Error).message) }
   }
 
   async function run(fn: () => Promise<unknown>, ok?: string) {
@@ -35,19 +36,19 @@ export function UsersPage() {
     }, `Dodano użytkownika ${f.email}`)
   }
 
-  function resetPassword(id: string, email: string) {
-    const pw = prompt(`Nowe hasło dla ${email} (min. 8 znaków, w tym cyfra):`)
+  async function resetPassword(id: string, email: string) {
+    const pw = await prompt({ title: `Zmiana hasła: ${email}`, label: 'Nowe hasło', type: 'password', hint: 'Min. 8 znaków, w tym cyfra' })
     if (pw) run(() => api.resetPassword(id, pw), `Zmieniono hasło użytkownika ${email}`)
   }
 
   return (
     <>
       <PageHeader title="Użytkownicy">
-        <button className="btn" disabled={backupBusy} onClick={async () => {
+        <Button  disabled={backupBusy} onClick={async () => {
           setBackupBusy(true)
           await run(() => api.backup(), 'Pobrano kopię zapasową bazy danych')
           setBackupBusy(false)
-        }}>Pobierz kopię zapasową</button>
+        }}>Pobierz kopię zapasową</Button>
       </PageHeader>
       <ErrorBox message={error || formError} />
       <Notice message={notice} />
@@ -62,7 +63,7 @@ export function UsersPage() {
             {roles.map(r => <option key={r} value={r}>{roleLabel[r]}</option>)}
           </select>
         </label>
-        <button className="btn btn-primary">Dodaj użytkownika</button>
+        <Button variant="primary">Dodaj użytkownika</Button>
       </form>
 
       {loading && !data && <Loading />}
@@ -86,9 +87,9 @@ export function UsersPage() {
                   <td>{u.lastLogin ? fmtDate(u.lastLogin) : '—'}</td>
                   <td>{u.isActive ? 'Aktywny' : 'Zablokowany'}</td>
                   <td className="actions">
-                    <button className="btn btn-small btn-link" onClick={() => resetPassword(u.id, u.email)}>Zmień hasło</button>
-                    {u.role !== 'Admin' && <button className="btn btn-small btn-link" onClick={() => openCompanies(u.id)}>Firmy</button>}
-                    {!self && <button className="btn btn-small btn-link" onClick={() => run(() => api.setUserActive(u.id, !u.isActive))}>{u.isActive ? 'Zablokuj' : 'Odblokuj'}</button>}
+                    <Button variant="link" small  onClick={() => resetPassword(u.id, u.email)}>Zmień hasło</Button>
+                    {u.role !== 'Admin' && <Button variant="link" small  onClick={() => openCompanies(u.id)}>Firmy</Button>}
+                    {!self && <Button variant="link" small  onClick={() => run(() => api.setUserActive(u.id, !u.isActive))}>{u.isActive ? 'Zablokuj' : 'Odblokuj'}</Button>}
                   </td>
                 </tr>
                 {editingCompanies === u.id && (
@@ -102,9 +103,9 @@ export function UsersPage() {
                         </label>
                       ))}
                     </div>
-                    <button className="btn btn-small btn-primary" style={{ marginTop: '.5rem' }}
-                      onClick={async () => { await run(() => apiC.setUserCompanies(u.id, selectedCompanies), `Zapisano dostęp do firm: ${u.email}`); setEditingCompanies(null) }}>Zapisz dostęp</button>
-                    <button className="btn btn-small btn-link" onClick={() => setEditingCompanies(null)}>Anuluj</button>
+                    <Button variant="primary" small  className="mt-2"
+                      onClick={async () => { await run(() => api.setUserCompanies(u.id, selectedCompanies), `Zapisano dostęp do firm: ${u.email}`); setEditingCompanies(null) }}>Zapisz dostęp</Button>
+                    <Button variant="link" small  onClick={() => setEditingCompanies(null)}>Anuluj</Button>
                   </td></tr>
                 )}
                 </Fragment>

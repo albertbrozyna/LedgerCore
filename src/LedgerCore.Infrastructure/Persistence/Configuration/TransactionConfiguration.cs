@@ -21,6 +21,7 @@ namespace LedgerCore.Infrastructure.Persistence.Configuration
             builder.HasIndex(t => new { t.CompanyId, t.Number }).IsUnique();
             builder.Property(t => t.Description).HasMaxLength(500).IsRequired();
             builder.HasIndex(t => t.Date);
+            builder.HasIndex(t => new { t.CompanyId, t.Date });
             builder.HasIndex(t => t.ReversesTransactionId);
         }
     }

@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react'
-import { apiZ } from '../api'
+import { api } from '../api'
 import { useAuth } from '../auth'
 import { fmtDate, roleLabel } from '../format'
-import { ErrorBox, Notice, PageHeader } from '../ui'
+import { Button, ErrorBox, Notice, PageHeader } from '../design'
 
 export function MyAccountPage() {
   const { user } = useAuth()
@@ -17,7 +17,7 @@ export function MyAccountPage() {
     setError(''); setNotice('')
     if (next !== repeat) { setError('Nowe hasła nie są takie same'); return }
     try {
-      await apiZ.changePassword(current, next)
+      await api.changePassword(current, next)
       setNotice('Hasło zostało zmienione')
       setCurrent(''); setNext(''); setRepeat('')
     } catch (err) { setError((err as Error).message) }
@@ -41,7 +41,7 @@ export function MyAccountPage() {
         <label>Aktualne hasło<input type="password" value={current} onChange={e => setCurrent(e.target.value)} required autoComplete="current-password" /></label>
         <label>Nowe hasło (min. 8 znaków, w tym cyfra)<input type="password" value={next} onChange={e => setNext(e.target.value)} required autoComplete="new-password" /></label>
         <label>Powtórz nowe hasło<input type="password" value={repeat} onChange={e => setRepeat(e.target.value)} required autoComplete="new-password" /></label>
-        <button className="btn btn-primary">Zmień hasło</button>
+        <Button variant="primary">Zmień hasło</Button>
       </form>
     </>
   )

@@ -49,8 +49,8 @@ sprawdzą stary interfejs. Po zmianie backendu zbuduj `dotnet build` (webServer 
   firmy przy zapisie dzieją się automatycznie. Unikalne indeksy muszą zawierać `CompanyId`. Zob. `docs/ARCHITECTURE.md`.
 - Każda operacja zmieniająca dane woła `AuditLog.Add(akcja, opis, ct)`; każde księgowanie z datą woła
   `PeriodGuard.EnsureOpen(db, data, ct)` (blokada okresu).
-- Kwoty: `decimal` (18,2), nigdy `double`. SQLite nie sumuje `decimal` w SQL – agreguj w pamięci (`LedgerQueries`)
-  albo użyj rozwiązania z zadania T-017.
+- Kwoty: `decimal` (18,2), nigdy `double`. SQLite nie sumuje `decimal` w SQL – używaj `LedgerQueries.Sums` (sumy `AmountCents` w groszach liczone w SQL;
+  `LoadEntries` w pamięci tylko dla eksportów i testów referencyjnych).
 - Księgowania tworzy się wyłącznie przez `Transaction` (domena pilnuje bilansu Winien = Ma). Nie ma kasowania
   księgowań – tylko storno. Faktury księgują się automatycznie; ich księgowań nie wolno stornować ręcznie.
 - Migracje muszą **zachowywać istniejące dane** (patrz `…_MultiCompany.cs` jako wzór). Testuj migrację na bazie

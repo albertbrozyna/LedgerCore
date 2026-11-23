@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../api'
 import { fmtDate, fmtMoney } from '../format'
 import { upcomingDeadlines } from '../taxCalendar'
-import { ErrorBox, Loading, PageHeader, useLoad } from '../ui'
+import { ErrorBox, Loading, PageHeader, useLoad } from '../design'
 
 export function DashboardPage() {
   const { data, error, loading } = useLoad(() => api.dashboard(), [])

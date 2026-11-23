@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { api, type AccountType } from '../api'
 import { useAuth } from '../auth'
 import { accountTypeLabel, fmtMoney } from '../format'
-import { ErrorBox, Loading, Notice, PageHeader, useLoad } from '../ui'
+import { Badge, Button, ErrorBox, Loading, Notice, PageHeader, useLoad } from '../design'
 
 const types = Object.keys(accountTypeLabel) as AccountType[]
 
@@ -51,7 +51,7 @@ export function AccountsPage() {
               {types.map(t => <option key={t} value={t}>{accountTypeLabel[t]}</option>)}
             </select>
           </label>
-          <button className="btn btn-primary">Dodaj konto</button>
+          <Button variant="primary">Dodaj konto</Button>
         </form>
       )}
 
@@ -66,7 +66,7 @@ export function AccountsPage() {
                 <td>
                   {editing === a.id ? (
                     <input aria-label="Nazwa konta" value={editName} onChange={e => setEditName(e.target.value)} />
-                  ) : (<>{a.name}{!a.isActive && <span className="badge"> nieaktywne</span>}</>)}
+                  ) : (<>{a.name}{!a.isActive && <Badge> nieaktywne</Badge>}</>)}
                 </td>
                 <td>{accountTypeLabel[a.type]}</td>
                 <td className="num">{fmtMoney(a.debitTotal)}</td>
@@ -76,13 +76,13 @@ export function AccountsPage() {
                   <Link to={`/accounts/${a.id}/ledger`}>Karta konta</Link>
                   {canWrite && (editing === a.id ? (
                     <>
-                      <button className="btn btn-small" onClick={() => save(a.id, a.isActive, editName)}>Zapisz</button>
-                      <button className="btn btn-small btn-link" onClick={() => setEditing(null)}>Anuluj</button>
+                      <Button small  onClick={() => save(a.id, a.isActive, editName)}>Zapisz</Button>
+                      <Button variant="link" small  onClick={() => setEditing(null)}>Anuluj</Button>
                     </>
                   ) : (
                     <>
-                      <button className="btn btn-small btn-link" onClick={() => { setEditing(a.id); setEditName(a.name) }}>Zmień nazwę</button>
-                      <button className="btn btn-small btn-link" onClick={() => save(a.id, !a.isActive, a.name)}>{a.isActive ? 'Dezaktywuj' : 'Aktywuj'}</button>
+                      <Button variant="link" small  onClick={() => { setEditing(a.id); setEditName(a.name) }}>Zmień nazwę</Button>
+                      <Button variant="link" small  onClick={() => save(a.id, !a.isActive, a.name)}>{a.isActive ? 'Dezaktywuj' : 'Aktywuj'}</Button>
                     </>
                   ))}
                 </td>

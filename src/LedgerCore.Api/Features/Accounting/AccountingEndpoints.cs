@@ -28,8 +28,8 @@ namespace LedgerCore.Api.Features.Accounting
                 await s.Send(new UpdateAccount.Command(id, b.Name, b.IsActive), ct);
                 return Results.NoContent();
             }).RequireAuthorization(Policies.CanWrite);
-            accounts.MapGet("{id:guid}/ledger", async (Guid id, DateTime? from, DateTime? to, ISender s, CancellationToken ct) =>
-                Results.Ok(await s.Send(new AccountLedger.Query(id, from, to), ct)));
+            accounts.MapGet("{id:guid}/ledger", async (Guid id, DateTime? from, DateTime? to, int? page, int? pageSize, ISender s, CancellationToken ct) =>
+                Results.Ok(await s.Send(new AccountLedger.Query(id, from, to, page, pageSize ?? 50), ct)));
 
             var tx = app.MapVersionedGroup("transactions").WithTags("Transactions");
             tx.MapGet("", async (DateTime? from, DateTime? to, Guid? accountId, string? search, int? page, int? pageSize,

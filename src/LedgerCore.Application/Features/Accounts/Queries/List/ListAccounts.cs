@@ -20,14 +20,12 @@ public static class ListAccounts
         {
             var accounts = await db.Accounts.AsNoTracking()
                 .Where(a => request.IncludeInactive || a.IsActive).ToListAsync(ct);
-            var rows = (await LedgerQueries.LoadEntries(db, null, null, null, ct)).ToLookup(r => r.AccountId);
+            var sums = await LedgerQueries.Sums(db, null, null, false, null, ct);
 
             return accounts.OrderBy(a => a.Code, StringComparer.Ordinal).Select(a =>
             {
-                var r = rows[a.Id].ToList();
-                var dr = r.Where(x => x.Side == DebitCredit.Debit).Sum(x => x.Amount);
-                var cr = r.Where(x => x.Side == DebitCredit.Credit).Sum(x => x.Amount);
-                return new AccountDto(a.Id, a.Code, a.Name, a.Type, a.IsActive, dr, cr, LedgerQueries.Natural(a, dr - cr));
+                var s = LedgerQueries.Of(sums, a.Id);
+                return new AccountDto(a.Id, a.Code, a.Name, a.Type, a.IsActive, s.Debit, s.Credit, LedgerQueries.Natural(a, s.Net));
             }).ToList();
         }
     }

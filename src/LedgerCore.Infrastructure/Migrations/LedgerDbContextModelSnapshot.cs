@@ -354,11 +354,20 @@ namespace LedgerCore.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
+                    b.Property<long>("AmountCents")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsClosing")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Side")
                         .HasColumnType("INTEGER");
@@ -373,6 +382,12 @@ namespace LedgerCore.Infrastructure.Migrations
                     b.HasIndex("CompanyId");
 
                     b.HasIndex("TransactionId");
+
+                    b.HasIndex("CompanyId", "AccountId", "Date", "Side", "AmountCents")
+                        .HasDatabaseName("IX_journalentries_Company_Account_Date");
+
+                    b.HasIndex("CompanyId", "Date", "AccountId", "Side", "AmountCents")
+                        .HasDatabaseName("IX_journalentries_Company_Date_Account");
 
                     b.ToTable("journalentries");
                 });
@@ -503,6 +518,8 @@ namespace LedgerCore.Infrastructure.Migrations
                     b.HasIndex("Date");
 
                     b.HasIndex("ReversesTransactionId");
+
+                    b.HasIndex("CompanyId", "Date");
 
                     b.HasIndex("CompanyId", "Number")
                         .IsUnique();

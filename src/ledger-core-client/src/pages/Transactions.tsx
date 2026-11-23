@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { api, apiZ, type Side } from '../api'
+import { api, type Side } from '../api'
 import { useAuth } from '../auth'
 import { fmtDate, fmtMoney, parseAmount, todayIso, yearStartIso } from '../format'
-import { ErrorBox, Loading, Notice, PageHeader, PrintHeader, useLoad } from '../ui'
+import { Badge, Button, ErrorBox, Loading, Notice, PageHeader, PrintHeader, useDialogs, useLoad } from '../design'
 
 export function JournalPage() {
   const [from, setFrom] = useState(yearStartIso())
@@ -20,8 +20,8 @@ export function JournalPage() {
   return (
     <>
       <PageHeader title="Dziennik księgowań">
-        <button className="btn" onClick={() => window.print()}>Drukuj / PDF</button>
-        <button className="btn" onClick={() => api.exportJournal(from, to).catch(e => setExportError(e.message))}>Eksport CSV</button>
+        <Button  onClick={() => window.print()}>Drukuj / PDF</Button>
+        <Button  onClick={() => api.exportJournal(from, to).catch(e => setExportError(e.message))}>Eksport CSV</Button>
         <Link className="btn btn-primary" to="/transactions/new">Nowe księgowanie</Link>
       </PageHeader>
       <PrintHeader title="Dziennik księgowań" period={`${from} – ${to || 'dziś'}`} />
@@ -47,7 +47,7 @@ export function JournalPage() {
                 <tr key={t.id}>
                   <td><Link to={`/transactions/${t.id}`}>{t.number}</Link></td>
                   <td>{fmtDate(t.date)}</td>
-                  <td>{t.description}{t.isReversal && <span className="badge"> storno</span>}{t.isReversed && <span className="badge badge-warn"> stornowane</span>}</td>
+                  <td>{t.description}{t.isReversal && <Badge> storno</Badge>}{t.isReversed && <Badge tone="warn"> stornowane</Badge>}</td>
                   <td className="num">{fmtMoney(t.amount)}</td>
                   <td></td>
                 </tr>
@@ -55,9 +55,9 @@ export function JournalPage() {
             </tbody>
           </table>
           <div className="pager">
-            <button className="btn btn-small" disabled={page <= 1} onClick={() => setPage(page - 1)}>‹ Poprzednia</button>
+            <Button small  disabled={page <= 1} onClick={() => setPage(page - 1)}>‹ Poprzednia</Button>
             <span>Strona {page} z {pages} ({data.totalCount} księgowań)</span>
-            <button className="btn btn-small" disabled={page >= pages} onClick={() => setPage(page + 1)}>Następna ›</button>
+            <Button small  disabled={page>= pages} onClick={() => setPage(page + 1)}>Następna ›</Button>
           </div>
         </>
       ))}
@@ -72,7 +72,7 @@ export function NewTransactionPage() {
   const { canWrite } = useAuth()
   const nav = useNavigate()
   const accounts = useLoad(() => api.accounts(), [])
-  const templates = useLoad(() => apiZ.templates(), [])
+  const templates = useLoad(() => api.templates(), [])
   const [templateName, setTemplateName] = useState('')
   const [notice, setNotice] = useState('')
   const [description, setDescription] = useState('')
@@ -108,7 +108,7 @@ export function NewTransactionPage() {
     const tl = lines.map((l, i) => ({ l, a: amounts[i] })).filter(x => x.l.accountId)
       .map(({ l, a }) => ({ accountId: l.accountId, side: (l.credit.trim() ? 'Credit' : 'Debit') as Side, amount: (a.d || a.c) || null }))
     try {
-      await apiZ.saveTemplate({ name: templateName, description, lines: tl })
+      await api.saveTemplate({ name: templateName, description, lines: tl })
       setNotice(`Zapisano szablon „${templateName}”`); setTemplateName(''); templates.reload()
     } catch (err) { setError((err as Error).message) }
   }
@@ -147,7 +147,7 @@ export function NewTransactionPage() {
         <label>Zapisz bieżące jako szablon
           <input aria-label="Nazwa szablonu" value={templateName} onChange={e => setTemplateName(e.target.value)} placeholder="np. Czynsz za biuro" maxLength={100} />
         </label>
-        <button type="button" className="btn" disabled={!templateName.trim()} onClick={saveTemplate}>Zapisz szablon</button>
+        <Button type="button"  disabled={!templateName.trim()} onClick={saveTemplate}>Zapisz szablon</Button>
       </div>
       <form className="card" onSubmit={submit}>
         <div className="form-row">
@@ -167,13 +167,13 @@ export function NewTransactionPage() {
                 </td>
                 <td><input className="num" inputMode="decimal" aria-label={`Winien w wierszu ${i + 1}`} value={l.debit} onChange={e => update(i, { debit: e.target.value, credit: e.target.value ? '' : l.credit })} placeholder="0,00" /></td>
                 <td><input className="num" inputMode="decimal" aria-label={`Ma w wierszu ${i + 1}`} value={l.credit} onChange={e => update(i, { credit: e.target.value, debit: e.target.value ? '' : l.debit })} placeholder="0,00" /></td>
-                <td>{lines.length > 2 && <button type="button" className="btn btn-small btn-link" onClick={() => setLines(lines.filter((_, j) => j !== i))}>Usuń</button>}</td>
+                <td>{lines.length > 2 && <Button variant="link" small type="button"  onClick={() => setLines(lines.filter((_, j) => j !== i))}>Usuń</Button>}</td>
               </tr>
             ))}
           </tbody>
           <tfoot>
             <tr>
-              <td><button type="button" className="btn btn-small" onClick={() => setLines([...lines, emptyLine()])}>+ Dodaj wiersz</button></td>
+              <td><Button small type="button"  onClick={() => setLines([...lines, emptyLine()])}>+ Dodaj wiersz</Button></td>
               <td className="num" data-testid="sum-debit">{fmtMoney(totalD)}</td>
               <td className="num" data-testid="sum-credit">{fmtMoney(totalC)}</td>
               <td></td>
@@ -183,13 +183,14 @@ export function NewTransactionPage() {
         <p className={balanced ? 'balance ok' : 'balance bad'} data-testid="balance-status">
           {invalid ? 'Niepoprawna kwota (użyj formatu 1234,50)' : balanced ? 'Księgowanie zbilansowane ✓' : `Różnica Winien − Ma: ${fmtMoney(diff)}`}
         </p>
-        <button className="btn btn-primary" disabled={busy || !balanced}>{busy ? 'Zapisywanie…' : 'Zaksięguj'}</button>
+        <Button variant="primary"  disabled={busy || !balanced}>{busy ? 'Zapisywanie…' : 'Zaksięguj'}</Button>
       </form>
     </>
   )
 }
 
 export function TransactionPage() {
+  const { confirm } = useDialogs()
   const { id } = useParams()
   const { canWrite } = useAuth()
   const nav = useNavigate()
@@ -198,7 +199,7 @@ export function TransactionPage() {
   const [notice, setNotice] = useState('')
 
   async function reverse() {
-    if (!confirm('Utworzyć storno tego księgowania? Zapis oryginalny pozostanie w dzienniku.')) return
+    if (!await confirm({ title: 'Utworzyć storno tego księgowania?', message: 'Zapis oryginalny pozostanie w dzienniku.', confirmLabel: 'Utwórz storno' })) return
     setActionError('')
     try {
       const r = await api.reverseTransaction(id!)
@@ -212,7 +213,7 @@ export function TransactionPage() {
       <PageHeader title={data ? `Księgowanie ${data.number}` : 'Księgowanie'}>
         <Link className="btn" to="/transactions">← Dziennik</Link>
         {canWrite && data && !data.reversesTransactionId && !data.reversedByTransactionId &&
-          <button className="btn btn-danger" onClick={reverse}>Storno</button>}
+          <Button variant="danger"  onClick={reverse}>Storno</Button>}
       </PageHeader>
       <ErrorBox message={error || actionError} />
       <Notice message={notice} />

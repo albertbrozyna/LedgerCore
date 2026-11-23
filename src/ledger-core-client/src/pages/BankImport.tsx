@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, apiX, type InvoiceItem } from '../api'
+import { api, type InvoiceItem } from '../api'
 import { useAuth } from '../auth'
 import { fmtMoney } from '../format'
 import { matchRow, parseBankCsv, type BankRow, type Confidence } from '../bankImport'
-import { ErrorBox, Notice, PageHeader, useLoad } from '../ui'
+import { Badge, Button, ErrorBox, Notice, PageHeader, useLoad } from '../design'
 
 interface Row extends BankRow { invoiceId: string; confidence: Confidence; selected: boolean; result?: string; ok?: boolean }
 
@@ -31,7 +31,7 @@ export function BankImportPage() {
     try {
       const parsed = parseBankCsv(csv)
       if (parsed.rows.length === 0) { setRows([]); setError('Nie znaleziono żadnych operacji. Plik powinien zawierać kolumny: data, kwota, tytuł (opcjonalnie kontrahent).'); return }
-      const list = (await apiX.invoices({ status: 'unpaid', pageSize: 200 })).items
+      const list = (await api.invoices({ status: 'unpaid', pageSize: 200 })).items
       setOpen(list)
       setSkipped(parsed.skipped)
       setRows(parsed.rows.map(r => {
@@ -59,7 +59,7 @@ export function BankImportPage() {
       const inv = open.find(x => x.id === r.invoiceId)!
       const amount = Math.min(Math.abs(r.amount), inv.remaining)
       try {
-        await apiX.addPayment(inv.id, { date: r.date, amount, accountId })
+        await api.addPayment(inv.id, { date: r.date, amount, accountId })
         next[i] = { ...r, ok: true, selected: false, result: `Zaksięgowano ${fmtMoney(amount)} do ${inv.number}` }
         inv.remaining = Math.round((inv.remaining - amount) * 100) / 100
         okCount++
@@ -90,10 +90,10 @@ export function BankImportPage() {
           </label>
           <label>Plik CSV<input type="file" accept=".csv,.txt" aria-label="Plik wyciągu" onChange={e => onFile(e.target.files?.[0])} /></label>
         </div>
-        <label style={{ marginTop: '.8rem' }}>…albo wklej treść wyciągu
+        <label className="mt-3">…albo wklej treść wyciągu
           <textarea rows={4} value={text} onChange={e => setText(e.target.value)} aria-label="Treść wyciągu" />
         </label>
-        <button className="btn" style={{ marginTop: '.5rem' }} onClick={() => analyze(text)} disabled={!text.trim()}>Analizuj</button>
+        <Button  className="mt-2" onClick={() => analyze(text)} disabled={!text.trim()}>Analizuj</Button>
       </div>
 
       {rows.length > 0 && (
@@ -109,7 +109,7 @@ export function BankImportPage() {
                     <td>{r.date}</td>
                     <td>{r.title}{r.counterparty && <div className="muted small">{r.counterparty}</div>}</td>
                     <td className="num">{fmtMoney(r.amount)}</td>
-                    <td><span className="badge">{confLabel[r.confidence]}</span></td>
+                    <td><Badge>{confLabel[r.confidence]}</Badge></td>
                     <td>
                       <select aria-label={`Faktura dla operacji ${i + 1}`} value={r.invoiceId} disabled={r.ok}
                         onChange={e => update(i, { invoiceId: e.target.value, selected: !!e.target.value })}>
@@ -124,9 +124,9 @@ export function BankImportPage() {
             </tbody>
           </table>
           <p className="muted small">{skipped > 0 && `Pominięto wierszy bez poprawnej daty lub kwoty: ${skipped}. `}Płatność nie przekroczy kwoty pozostałej do zapłaty na fakturze.</p>
-          <button className="btn btn-primary" disabled={busy || !accountId || selectedCount === 0} onClick={post}>
+          <Button variant="primary"  disabled={busy || !accountId || selectedCount === 0} onClick={post}>
             {busy ? 'Księgowanie…' : `Zaksięguj zaznaczone (${selectedCount})`}
-          </button>
+          </Button>
         </>
       )}
     </>

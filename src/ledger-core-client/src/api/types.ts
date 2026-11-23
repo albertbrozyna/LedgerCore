@@ -1,0 +1,106 @@
+// Typy DTO zwracane przez API (zgodne z kontraktem backendu).
+
+export type Role = 'Admin' | 'Accountant' | 'Viewer'
+export type AccountType = 'Asset' | 'Liability' | 'Equity' | 'Income' | 'Expense'
+export type Side = 'Debit' | 'Credit'
+export type InvoiceType = 'Sales' | 'Purchase'
+export type VatRate = 'R23' | 'R8' | 'R5' | 'R0' | 'Exempt'
+export type InvoiceStatus = 'unpaid' | 'overdue' | 'paid' | 'canceled' | 'correction'
+
+// ---- Użytkownicy ----
+export interface UserInfo {
+  id: string; firstName: string; lastName: string; email: string; phoneNumber?: string
+  role: Role; isActive: boolean; createdAt: string; lastLogin?: string | null
+}
+
+// ---- Księga ----
+export interface AccountDto {
+  id: string; code: string; name: string; type: AccountType; isActive: boolean
+  debitTotal: number; creditTotal: number; balance: number
+}
+export interface TxItem {
+  id: string; number: string; date: string; description: string; amount: number
+  entryCount: number; isReversal: boolean; isReversed: boolean
+}
+export interface TxList { items: TxItem[]; totalCount: number; page: number; pageSize: number }
+export interface TxDetail {
+  id: string; number: string; date: string; createdAt: string; description: string
+  reversesTransactionId?: string | null; reversesNumber?: string | null
+  reversedByTransactionId?: string | null; reversedByNumber?: string | null
+  entries: { accountId: string; accountCode: string; accountName: string; amount: number; side: Side }[]
+}
+export interface TemplateLine { accountId: string; side: Side; amount?: number | null }
+export interface TemplateDto { id: string; name: string; description: string; lines: TemplateLine[] }
+
+// ---- Raporty ----
+export interface DashboardDto {
+  assets: number; liabilities: number; equity: number; monthIncome: number; monthExpenses: number
+  monthResult: number; accountCount: number; transactionCount: number
+  receivables: number; receivablesOverdue: number; payables: number; payablesOverdue: number
+  months: { month: string; income: number; expenses: number }[]
+  recent: { id: string; number: string; date: string; description: string; amount: number }[]
+}
+export interface TrialRow {
+  accountId: string; code: string; name: string; type: AccountType
+  opening: number; debitTurnover: number; creditTurnover: number; closing: number
+}
+export interface TrialBalanceDto { rows: TrialRow[]; totalDebitTurnover: number; totalCreditTurnover: number }
+export interface LedgerDto {
+  accountId: string; code: string; name: string; type: AccountType; openingBalance: number
+  lines: { transactionId: string; number: string; date: string; description: string; debit: number; credit: number; balance: number }[]
+  totalDebit: number; totalCredit: number; closingBalance: number
+  totalCount: number; page: number; pageSize: number
+}
+export interface ReportRow { accountId: string; code: string; name: string; amount: number }
+export interface PnlDto {
+  income: ReportRow[]; expenses: ReportRow[]
+  totalIncome: number; totalExpenses: number; result: number
+}
+export interface BalanceSheetDto {
+  asOf: string
+  assets: ReportRow[]; liabilities: ReportRow[]; equity: ReportRow[]
+  currentResult: number; totalAssets: number; totalLiabilitiesAndEquity: number
+}
+export interface VatRegisterDto {
+  rows: { invoiceId: string; number: string; issueDate: string; saleDate: string; contractorName: string; nip?: string | null; net: number; vat: number; gross: number }[]
+  byRate: { rate: VatRate; net: number; vat: number }[]
+  totalNet: number; totalVat: number; totalGross: number
+}
+export interface VatSummaryDto { outputNet: number; outputVat: number; inputNet: number; inputVat: number; vatDue: number }
+export interface SettlementsDto {
+  rows: { contractorId: string; contractorName: string; nip?: string | null; total: number; notDue: number; days1To30: number; days31To60: number; over60: number; invoiceCount: number }[]
+  total: number; overdue: number
+}
+
+// ---- Faktury i kontrahenci ----
+export interface ContractorDto {
+  id: string; name: string; nip?: string | null; address?: string | null; email?: string | null
+  isActive: boolean; receivables: number; payables: number
+}
+export interface InvoiceItem {
+  id: string; type: InvoiceType; number: string; contractorId: string; contractorName: string
+  issueDate: string; dueDate: string; net: number; vat: number; gross: number
+  paidAmount: number; remaining: number; status: InvoiceStatus
+  isCorrection: boolean; correctedInvoiceId?: string | null; correctedNumber?: string | null
+}
+export interface InvoiceList { items: InvoiceItem[]; totalCount: number; page: number; pageSize: number; totalGross: number; totalRemaining: number }
+export interface InvoiceDetail {
+  id: string; type: InvoiceType; number: string; contractorId: string; contractorName: string; contractorNip?: string | null
+  issueDate: string; saleDate: string; dueDate: string; net: number; vat: number; gross: number
+  paidAmount: number; remaining: number; status: InvoiceStatus; notes?: string | null
+  transactionId?: string | null; transactionNumber?: string | null
+  lines: { description: string; net: number; vatRate: VatRate; vat: number; gross: number }[]
+  payments: { id: string; date: string; amount: number; accountCode: string; accountName: string; transactionId: string }[]
+  isCorrection: boolean; correctedInvoiceId?: string | null; correctedNumber?: string | null
+  correctedAmount: number; grossAfterCorrections: number
+  corrections: { id: string; number: string; issueDate: string; gross: number; isCanceled: boolean }[]
+}
+export interface InvoiceLineInput { description: string; net: number; vatRate: VatRate }
+export interface AttachmentDto { id: string; fileName: string; contentType: string; size: number; uploadedAt: string }
+
+// ---- Firmy i administracja ----
+export interface CompanyDto { name: string; nip?: string | null; address?: string | null; email?: string | null; phone?: string | null; bankAccount?: string | null; invoiceFooter?: string | null }
+export interface CompanyListItem { id: string; name: string; nip?: string | null }
+export interface CompanyAdminItem { id: string; name: string; nip?: string | null; address?: string | null; isActive: boolean; createdAt: string }
+export interface BackupItem { name: string; size: number; created: string; manual: boolean }
+export interface AuditList { items: { id: string; at: string; userName: string; action: string; details: string }[]; totalCount: number; page: number; pageSize: number }

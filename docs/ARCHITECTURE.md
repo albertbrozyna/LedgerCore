@@ -26,7 +26,7 @@ Domena nie zna EF ani HTTP. Handlery Application używają `IAppDbContext` (zaim
 - Zamknięcie roku: transakcje `ZR/rok/0001` zerują konta wynikowe, wynik trafia na konto 860; raporty wyników i pulpit
   **pomijają** transakcje o numerze zaczynającym się od `ZR/`.
 - Blokada okresu (`PeriodLock`, jeden wiersz na firmę): `PeriodGuard.EnsureOpen` przed każdym księgowaniem z datą.
-- Raporty liczą się w pamięci z `LedgerQueries.LoadEntries` (SQLite nie sumuje `decimal`) – patrz T-017 dla skalowania.
+- Raporty liczą sumy w SQL na kolumnie `JournalEntry.AmountCents` (grosze, `long`) przez `LedgerQueries.Sums` – SQLite nie sumuje `decimal`. `JournalEntry` ma też kopię `Date` i `IsClosing` z nagłówka księgowania (ustawiane w `Transaction.AddEntry`), by agregować bez łączenia tabel; nowy raport powinien używać `Sums`, a nie `LoadEntries` (zostaje dla eksportu CSV).
 
 ## Faktury
 

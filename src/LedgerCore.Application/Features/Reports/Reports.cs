@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LedgerCore.Application.Features.Reports;
 
-/// <summary>Zestawienie obrotów i ssald (bilans próbny) za okres.</summary>
+/// <summary>Zestawienie obrotów i sald (bilans próbny) za okres. Sumy liczone w SQL (T-017).</summary>
 public static class TrialBalance
 {
     public record Query(DateTime? From, DateTime? To) : IRequest<Response>;
@@ -26,18 +26,15 @@ public static class TrialBalance
         public async Task<Response> Handle(Query r, CancellationToken ct)
         {
             var accounts = await db.Accounts.AsNoTracking().ToListAsync(ct);
-            var entries = await LedgerQueries.LoadEntries(db, null, r.To, null, ct);
             var from = r.From?.Date;
+            var before = from.HasValue ? await LedgerQueries.Sums(db, null, from.Value.AddDays(-1), false, null, ct) : new();
+            var period = await LedgerQueries.Sums(db, from, r.To, false, null, ct);
 
             var rows = accounts.OrderBy(a => a.Code, StringComparer.Ordinal).Select(a =>
             {
-                var mine = entries.Where(e => e.AccountId == a.Id).ToList();
-                var before = from.HasValue ? mine.Where(e => e.Date < from.Value).ToList() : new List<EntryRow>();
-                var period = from.HasValue ? mine.Where(e => e.Date >= from.Value).ToList() : mine;
-                var dr = period.Where(e => e.Side == DebitCredit.Debit).Sum(e => e.Amount);
-                var cr = period.Where(e => e.Side == DebitCredit.Credit).Sum(e => e.Amount);
-                var opening = LedgerQueries.Net(before);
-                return new Row(a.Id, a.Code, a.Name, a.Type, opening, dr, cr, opening + dr - cr);
+                var opening = LedgerQueries.Of(before, a.Id).Net;
+                var p = LedgerQueries.Of(period, a.Id);
+                return new Row(a.Id, a.Code, a.Name, a.Type, opening, p.Debit, p.Credit, opening + p.Debit - p.Credit);
             }).Where(x => x.Opening != 0 || x.DebitTurnover != 0 || x.CreditTurnover != 0 || x.Closing != 0).ToList();
 
             return new Response(rows, rows.Sum(x => x.DebitTurnover), rows.Sum(x => x.CreditTurnover));
@@ -45,17 +42,21 @@ public static class TrialBalance
     }
 }
 
-/// <summary>Karta konta (zapisy z saldem narastającym).</summary>
+/// <summary>
+/// Karta konta (zapisy z saldem narastającym). Bez <c>Page</c> zwraca wszystkie wiersze (wydruk/eksport),
+/// z <c>Page</c> – jedną stronę; salda i sumy dotyczą zawsze całego okresu.
+/// </summary>
 public static class AccountLedger
 {
-    public record Query(Guid AccountId, DateTime? From, DateTime? To) : IRequest<Response>;
+    public record Query(Guid AccountId, DateTime? From, DateTime? To, int? Page = null, int PageSize = 50) : IRequest<Response>;
 
     public record Line(Guid TransactionId, string Number, DateTime Date, string Description,
         decimal Debit, decimal Credit, decimal Balance);
 
-    /// <summary>Salda w znaku naturalnym konta.</summary>
+    /// <summary>Salda w znaku naturalnym konta. TotalDebit/TotalCredit/ClosingBalance dotyczą całego okresu, nie tylko strony.</summary>
     public record Response(Guid AccountId, string Code, string Name, AccountType Type,
-        decimal OpeningBalance, List<Line> Lines, decimal TotalDebit, decimal TotalCredit, decimal ClosingBalance);
+        decimal OpeningBalance, List<Line> Lines, decimal TotalDebit, decimal TotalCredit, decimal ClosingBalance,
+        int TotalCount, int Page, int PageSize);
 
     public class Handler(IAppDbContext db) : IRequestHandler<Query, Response>
     {
@@ -63,22 +64,55 @@ public static class AccountLedger
         {
             var a = await db.Accounts.AsNoTracking().FirstOrDefaultAsync(x => x.Id == r.AccountId, ct)
                     ?? throw new AccountNotFoundException(r.AccountId);
-            var all = await LedgerQueries.LoadEntries(db, null, r.To, a.Id, ct);
             var from = r.From?.Date;
+            var to = r.To?.Date;
 
-            var opening = from.HasValue ? LedgerQueries.Natural(a, LedgerQueries.Net(all.Where(e => e.Date < from.Value))) : 0m;
+            var opening = from.HasValue
+                ? LedgerQueries.Natural(a, LedgerQueries.Of(await LedgerQueries.Sums(db, null, from.Value.AddDays(-1), false, a.Id, ct), a.Id).Net)
+                : 0m;
+            var total = LedgerQueries.Of(await LedgerQueries.Sums(db, from, to, false, a.Id, ct), a.Id);
+
+            var q = db.JournalEntries.AsNoTracking().Where(e => e.AccountId == a.Id);
+            if (from.HasValue) q = q.Where(e => e.Date >= from.Value);
+            if (to.HasValue) q = q.Where(e => e.Date <= to.Value);
+            var ordered = q.OrderBy(e => e.Date).ThenBy(e => e.Transaction.CreatedAt).ThenBy(e => e.Transaction.Number);
+            var count = await q.CountAsync(ct);
+
+            var paged = r.Page.HasValue;
+            var size = Math.Clamp(r.PageSize, 1, 500);
+            var page = paged ? Math.Max(1, r.Page!.Value) : 1;
+            var skip = paged ? (page - 1) * size : 0;
+
+            // saldo na początku strony = saldo otwarcia + suma wierszy poprzedzających stronę (same kwoty, bez opisów)
             var running = opening;
-            var lines = new List<Line>();
-            foreach (var e in all.Where(e => !from.HasValue || e.Date >= from.Value))
+            if (skip > 0)
             {
-                var signed = e.Side == DebitCredit.Debit ? e.Amount : -e.Amount;
+                var before = await ordered.Take(skip).Select(e => new { e.Side, e.AmountCents }).ToListAsync(ct);
+                running += Signed(a, before.Sum(x => x.Side == DebitCredit.Debit ? x.AmountCents : -x.AmountCents));
+            }
+
+            var rowsQuery = paged ? ordered.Skip(skip).Take(size) : ordered;
+            var rows = await rowsQuery.Select(e => new
+            {
+                e.TransactionId, e.Transaction.Number, e.Date, e.Transaction.Description, e.AmountCents, e.Side
+            }).ToListAsync(ct);
+
+            var lines = new List<Line>(rows.Count);
+            foreach (var e in rows)
+            {
+                var amount = e.AmountCents / 100m;
+                var signed = e.Side == DebitCredit.Debit ? amount : -amount;
                 running += a.IsDebitNormal ? signed : -signed;
                 lines.Add(new Line(e.TransactionId, e.Number, e.Date, e.Description,
-                    e.Side == DebitCredit.Debit ? e.Amount : 0, e.Side == DebitCredit.Credit ? e.Amount : 0, running));
+                    e.Side == DebitCredit.Debit ? amount : 0, e.Side == DebitCredit.Credit ? amount : 0, running));
             }
-            return new Response(a.Id, a.Code, a.Name, a.Type, opening, lines,
-                lines.Sum(l => l.Debit), lines.Sum(l => l.Credit), running);
+
+            var closing = opening + LedgerQueries.Natural(a, total.Net);
+            return new Response(a.Id, a.Code, a.Name, a.Type, opening, lines, total.Debit, total.Credit, closing,
+                count, paged ? page : 1, paged ? size : Math.Max(count, 1));
         }
+
+        static decimal Signed(Account a, long netCents) => LedgerQueries.Natural(a, netCents / 100m);
     }
 }
 
@@ -95,10 +129,10 @@ public static class ProfitAndLoss
         {
             var accounts = await db.Accounts.AsNoTracking()
                 .Where(a => a.Type == AccountType.Income || a.Type == AccountType.Expense).ToListAsync(ct);
-            var entries = (await LedgerQueries.LoadEntries(db, r.From, r.To, null, ct)).Where(e => !e.Number.StartsWith("ZR/")).ToLookup(e => e.AccountId);
+            var sums = await LedgerQueries.Sums(db, r.From, r.To, true, null, ct);
 
             List<Row> Build(AccountType t) => accounts.Where(a => a.Type == t).OrderBy(a => a.Code, StringComparer.Ordinal)
-                .Select(a => new Row(a.Id, a.Code, a.Name, LedgerQueries.Natural(a, LedgerQueries.Net(entries[a.Id]))))
+                .Select(a => new Row(a.Id, a.Code, a.Name, LedgerQueries.Natural(a, LedgerQueries.Of(sums, a.Id).Net)))
                 .Where(x => x.Amount != 0).ToList();
 
             var income = Build(AccountType.Income);
@@ -124,38 +158,43 @@ public static class Dashboard
         public async Task<Response> Handle(Query request, CancellationToken ct)
         {
             var accounts = await db.Accounts.AsNoTracking().ToListAsync(ct);
-            var entries = await LedgerQueries.LoadEntries(db, null, null, null, ct);
-            var byAccount = entries.ToLookup(e => e.AccountId);
-            decimal Sum(AccountType t, DateTime? from = null) => accounts.Where(a => a.Type == t).Sum(a =>
-                LedgerQueries.Natural(a, LedgerQueries.Net(byAccount[a.Id].Where(e => !from.HasValue || (e.Date >= from.Value && !e.Number.StartsWith("ZR/"))))));
-
             var today = DateTime.Today;
             var monthStart = new DateTime(today.Year, today.Month, 1);
-            var income = Sum(AccountType.Income, monthStart);
-            var expenses = Sum(AccountType.Expense, monthStart);
+            var firstMonth = monthStart.AddMonths(-11);
+
+            var all = await LedgerQueries.Sums(db, null, null, false, null, ct);                 // salda bilansowe (łącznie z zamknięciem roku)
+            var live = await LedgerQueries.Sums(db, monthStart, null, true, null, ct);           // wynik bieżącego miesiąca (bez ZR/)
+            decimal Bal(AccountType t, Dictionary<Guid, AccountSum> s) =>
+                accounts.Where(a => a.Type == t).Sum(a => LedgerQueries.Natural(a, LedgerQueries.Of(s, a.Id).Net));
+
+            var income = Bal(AccountType.Income, live);
+            var expenses = Bal(AccountType.Expense, live);
 
             var recent = await db.Transactions.AsNoTracking().OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAt)
-                .Take(5).Select(t => new { t.Id, t.Number, t.Date, t.Description, Debits = t.Entries.Where(e => e.Side == DebitCredit.Debit).Select(e => e.Amount).ToList() })
+                .Take(5).Select(t => new { t.Id, t.Number, t.Date, t.Description, Debits = t.Entries.Where(e => e.Side == DebitCredit.Debit).Select(e => e.AmountCents).ToList() })
                 .ToListAsync(ct);
 
             var open = (await db.Invoices.AsNoTracking().Where(i => !i.IsCanceled).ToListAsync(ct)).Where(i => i.Remaining > 0).ToList();
             decimal Rem(InvoiceType t, bool overdueOnly) => open.Where(i => i.Type == t && (!overdueOnly || i.DueDate < today)).Sum(i => i.Remaining);
 
-            // Ostatnie 12 miesięcy (bez księgowań zamykających rok)
+            // Ostatnie 12 miesięcy (bez księgowań zamykających rok): obroty dzienne per konto i strona, miesiące składane w pamięci
             var incomeIds = accounts.Where(a => a.Type == AccountType.Income).Select(a => a.Id).ToHashSet();
             var expenseIds = accounts.Where(a => a.Type == AccountType.Expense).Select(a => a.Id).ToHashSet();
-            var live = entries.Where(e => !e.Number.StartsWith("ZR/")).ToList();
-            var months = Enumerable.Range(0, 12).Select(i => monthStart.AddMonths(i - 11)).Select(m =>
+            var daily = await db.JournalEntries.AsNoTracking()
+                .Where(e => !e.IsClosing && e.Date >= firstMonth)
+                .GroupBy(e => new { e.Date, e.AccountId, e.Side })
+                .Select(g => new { g.Key.Date, g.Key.AccountId, g.Key.Side, Cents = g.Sum(e => e.AmountCents) })
+                .ToListAsync(ct);
+            var months = Enumerable.Range(0, 12).Select(i => firstMonth.AddMonths(i)).Select(m =>
             {
-                var inMonth = live.Where(e => e.Date.Year == m.Year && e.Date.Month == m.Month).ToList();
-                var inc = LedgerQueries.Net(inMonth.Where(e => incomeIds.Contains(e.AccountId)));
-                var exp = LedgerQueries.Net(inMonth.Where(e => expenseIds.Contains(e.AccountId)));
-                return new MonthPoint(m.ToString("yyyy-MM"), -inc, exp);
+                long Net(HashSet<Guid> ids) => daily.Where(e => e.Date.Year == m.Year && e.Date.Month == m.Month && ids.Contains(e.AccountId))
+                    .Sum(e => e.Side == DebitCredit.Debit ? e.Cents : -e.Cents);
+                return new MonthPoint(m.ToString("yyyy-MM"), -Net(incomeIds) / 100m, Net(expenseIds) / 100m);
             }).ToList();
 
-            return new Response(Sum(AccountType.Asset), Sum(AccountType.Liability), Sum(AccountType.Equity),
+            return new Response(Bal(AccountType.Asset, all), Bal(AccountType.Liability, all), Bal(AccountType.Equity, all),
                 income, expenses, income - expenses, accounts.Count, await db.Transactions.CountAsync(ct),
-                recent.Select(t => new RecentTx(t.Id, t.Number, t.Date, t.Description, t.Debits.Sum())).ToList(),
+                recent.Select(t => new RecentTx(t.Id, t.Number, t.Date, t.Description, t.Debits.Sum() / 100m)).ToList(),
                 Rem(InvoiceType.Sales, false), Rem(InvoiceType.Sales, true), Rem(InvoiceType.Purchase, false), Rem(InvoiceType.Purchase, true), months);
         }
     }
@@ -208,8 +247,8 @@ public static class BalanceSheet
         public async Task<Response> Handle(Query r, CancellationToken ct)
         {
             var accounts = await db.Accounts.AsNoTracking().ToListAsync(ct);
-            var entries = (await LedgerQueries.LoadEntries(db, null, r.AsOf, null, ct)).ToLookup(e => e.AccountId);
-            decimal Bal(Account a) => LedgerQueries.Natural(a, LedgerQueries.Net(entries[a.Id]));
+            var sums = await LedgerQueries.Sums(db, null, r.AsOf, false, null, ct);
+            decimal Bal(Account a) => LedgerQueries.Natural(a, LedgerQueries.Of(sums, a.Id).Net);
             List<Row> Rows(AccountType t) => accounts.Where(a => a.Type == t).OrderBy(a => a.Code, StringComparer.Ordinal)
                 .Select(a => new Row(a.Id, a.Code, a.Name, Bal(a))).Where(x => x.Amount != 0).ToList();
 

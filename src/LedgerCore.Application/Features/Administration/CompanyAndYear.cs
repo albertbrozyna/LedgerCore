@@ -83,13 +83,13 @@ public static class CloseYear
 
             // otwarte (niezapłacone) faktury nie blokują zamknięcia – rozrachunki są kontami bilansowymi i przechodzą dalej
             var accounts = await db.Accounts.Where(a => a.Type == AccountType.Income || a.Type == AccountType.Expense).ToListAsync(ct);
-            var entries = (await LedgerQueries.LoadEntries(db, new DateTime(r.Year, 1, 1), end, null, ct)).ToLookup(e => e.AccountId);
+            var sums = await LedgerQueries.Sums(db, new DateTime(r.Year, 1, 1), end, false, null, ct);
 
             var tx = new Transaction($"Zamknięcie roku obrotowego {r.Year} – przeniesienie wyniku finansowego", end, number, me.User?.Id);
             decimal result = 0;
             foreach (var a in accounts.OrderBy(a => a.Code, StringComparer.Ordinal))
             {
-                var net = LedgerQueries.Net(entries[a.Id]); // Winien − Ma
+                var net = LedgerQueries.Of(sums, a.Id).Net; // Winien − Ma
                 if (net == 0) continue;
                 // wyzerowanie salda: strona przeciwna do salda
                 if (net > 0) tx.AddEntry(a.Id, net, DebitCredit.Credit); else tx.AddEntry(a.Id, -net, DebitCredit.Debit);
