@@ -93,7 +93,7 @@ Migracje bazy stosowane są automatycznie przy starcie aplikacji.
 
 ## Plan rozwoju
 
-Pełna lista funkcji i statusów: [`docs/CHECKLIST.md`](docs/CHECKLIST.md).
+Funkcje i statusy: [`docs/CHECKLIST.md`](docs/CHECKLIST.md) · roadmapa i zadania: [`docs/ROADMAP.md`](docs/ROADMAP.md), [`docs/tasks/INDEX.md`](docs/tasks/INDEX.md) · zasady pracy (także dla Claude’a): [`CLAUDE.md`](CLAUDE.md).
 
 ## Czego jeszcze nie ma
 

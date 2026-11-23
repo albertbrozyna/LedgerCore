@@ -1,5 +1,7 @@
 # Checklista: mocny program księgowy dla małego biura
 
+Plan prac i zadania: [`ROADMAP.md`](ROADMAP.md), [`tasks/INDEX.md`](tasks/INDEX.md).
+
 Legenda: ✅ zrobione · ⬜ później · ⛔ zablokowane zewnętrznie
 
 ## Księga główna
