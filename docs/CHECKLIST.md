@@ -62,3 +62,4 @@ Legenda: ✅ zrobione · ⬜ później · ⛔ zablokowane zewnętrznie
 - ✅ Globalna wyszukiwarka i paleta poleceń (Ctrl+K), skróty klawiaturowe z pomocą (N, F, ?, Alt+↑/↓)
 - ✅ Szybkie księgowanie z klawiatury: autouzupełnianie kont, Ctrl+Enter, podgląd sald, „Kopiuj jako nowe”
 - ✅ KPiR i ryczałt: tryb ewidencji firmy, księga przychodów i rozchodów (kolumny 7–17), ewidencja przychodów ryczałtu, eksport CSV i druk
+- ✅ Windykacja: wezwania do zapłaty i noty odsetkowe (wydruk lub e-mail przez SMTP), tabela stóp odsetek, historia wysyłek

@@ -41,6 +41,16 @@ SZYBKIE KSIĘGOWANIE
   przechodzi dalej (w ostatnim polu - dodaje wiersz), Ctrl+Enter księguje. Pod formularzem widać saldo wybranych kont
   przed i po księgowaniu. "Kopiuj jako nowe" (na liście i w szczegółach) tworzy nowe księgowanie z datą dzisiejszą.
 
+WINDYKACJA (WEZWANIA DO ZAPŁATY I NOTY ODSETKOWE)
+  Menu "Windykacja" pokazuje kontrahentów z fakturami po terminie (opłacone, anulowane i korekty są pomijane). Po wybraniu kontrahenta
+  przygotuj wezwanie do zapłaty lub notę odsetkową, popraw temat i treść, a następnie wydrukuj ("Zapisz i drukuj" - w przeglądarce
+  wybierz Drukuj / zapisz jako PDF) albo wyślij e-mailem. Każdy dokument zostaje w historii kontrahenta i faktury.
+  PRZED PIERWSZYM UŻYCIEM (Administrator, menu "Administracja"):
+  1) "Stopy odsetek za opóźnienie" - wpisz aktualną stopę roczną i datę jej wejścia w życie (stopy zmieniają się, program ich nie zna;
+     każdą zmianę stopy dopisz jako kolejny wiersz). Odsetki = kwota x stopa roczna / 365 za każdy dzień zwłoki.
+  2) "Poczta wychodząca (SMTP)" - serwer, port, login i hasło skrzynki, z której mają wychodzić wiadomości; użyj "Wyślij wiadomość testową".
+     Hasło jest przechowywane zaszyfrowane. Po przeniesieniu programu na inny komputer wpisz je ponownie.
+
 KPIR I RYCZAŁT
   Przy dodawaniu firmy (menu "Firmy") wybierz "Tryb ewidencji": Pełna księgowość, KPiR albo Ryczałt. Firma w trybie
   KPiR/ryczałt nie ma planu kont, dziennika ani bilansu - faktury sprzedaży i zakupu trafiają wprost do ewidencji

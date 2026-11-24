@@ -26,6 +26,8 @@ namespace LedgerCore.Infrastructure.Extensions
             services.AddScoped<ILoginUserService, LoginUserService>();
             services.AddScoped<IVerificationCodeService, VerificationCodeService>();
             services.AddScoped<IEmailSender, EmailSender>();
+            services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
+            services.AddScoped<IMailer, SmtpMailer>();
 
 
 

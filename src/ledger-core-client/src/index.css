@@ -263,3 +263,4 @@ kbd { font: inherit; font-size: .8rem; border: 1px solid var(--border); border-b
 .combobox-list { position: absolute; z-index: 20; left: 0; right: 0; top: 100%; margin: 2px 0 0; padding: .25rem; list-style: none; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-2); max-height: 18rem; overflow-y: auto; min-width: 16rem; }
 .combobox-empty { padding: .4rem .6rem; }
 .preview-table td, .preview-table th { padding: .3rem .6rem; }
+.pre-wrap { white-space: pre-wrap; }

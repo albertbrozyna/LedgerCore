@@ -130,6 +130,106 @@ namespace LedgerCore.Infrastructure.Migrations
                     b.ToTable("auditentries");
                 });
 
+            modelBuilder.Entity("LedgerCore.Domain.Entities.CollectionNotice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CalculationDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Channel")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ContractorId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Interest")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LinesJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PaymentDeadline")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Principal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SentTo")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("CompanyId", "ContractorId");
+
+                    b.ToTable("collectionnotices");
+                });
+
+            modelBuilder.Entity("LedgerCore.Domain.Entities.CollectionNoticeInvoice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("InvoiceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("NoticeId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("NoticeId");
+
+                    b.HasIndex("CompanyId", "InvoiceId");
+
+                    b.ToTable("collectionnoticeinvoices");
+                });
+
             modelBuilder.Entity("LedgerCore.Domain.Entities.Company", b =>
                 {
                     b.Property<Guid>("Id")
@@ -218,6 +318,31 @@ namespace LedgerCore.Infrastructure.Migrations
                     b.HasIndex("Nip");
 
                     b.ToTable("contractors");
+                });
+
+            modelBuilder.Entity("LedgerCore.Domain.Entities.InterestRate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("AnnualPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ValidFrom")
+                        .IsUnique();
+
+                    b.ToTable("interestrates");
                 });
 
             modelBuilder.Entity("LedgerCore.Domain.Entities.Invoice", b =>
@@ -400,6 +525,67 @@ namespace LedgerCore.Infrastructure.Migrations
                         .HasDatabaseName("IX_journalentries_Company_Date_Account");
 
                     b.ToTable("journalentries");
+                });
+
+            modelBuilder.Entity("LedgerCore.Domain.Entities.MailSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FromAddress")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FromName")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Host")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("InterestBody")
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("InterestSubject")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Port")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ProtectedPassword")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReminderBody")
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReminderSubject")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("UseTls")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId")
+                        .IsUnique();
+
+                    b.ToTable("mailsettings");
                 });
 
             modelBuilder.Entity("LedgerCore.Domain.Entities.Payment", b =>
@@ -844,6 +1030,15 @@ namespace LedgerCore.Infrastructure.Migrations
                     b.ToTable("aspnetusertokens", (string)null);
                 });
 
+            modelBuilder.Entity("LedgerCore.Domain.Entities.CollectionNoticeInvoice", b =>
+                {
+                    b.HasOne("LedgerCore.Domain.Entities.CollectionNotice", null)
+                        .WithMany("Invoices")
+                        .HasForeignKey("NoticeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("LedgerCore.Domain.Entities.Invoice", b =>
                 {
                     b.HasOne("LedgerCore.Domain.Entities.Contractor", "Contractor")
@@ -963,6 +1158,11 @@ namespace LedgerCore.Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("LedgerCore.Domain.Entities.CollectionNotice", b =>
+                {
+                    b.Navigation("Invoices");
                 });
 
             modelBuilder.Entity("LedgerCore.Domain.Entities.Invoice", b =>

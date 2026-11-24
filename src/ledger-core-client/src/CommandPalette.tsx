@@ -53,6 +53,7 @@ export function CommandPalette({ onClose, onHelp }: { onClose: () => void; onHel
     else add(mode === 'Kpir' ? 'Ewidencja KPiR' : 'Ewidencja ryczałtu', go('/register'))
     add('Faktury', go('/invoices'))
     add('Kontrahenci', go('/contractors'))
+    add('Windykacja – faktury po terminie', go('/collections'))
     if (fullBooks) add('Plan kont', go('/accounts'))
     add('Raporty', go('/reports'))
     if (fullBooks) add('Import wyciągu bankowego', go('/bank-import'))

@@ -136,3 +136,35 @@ export interface RyczaltDto {
   totalRevenue: number; byRate: RyczaltRateTotal[]; yearToDateByRate: RyczaltRateTotal[]; yearToDateTax: number
   months: { month: string; revenue: number; yearToDateRevenue: number; yearToDateTax: number }[]
 }
+
+// ---- Windykacja: wezwania, noty odsetkowe, poczta, stopy odsetek ----
+export type NoticeKind = 'Reminder' | 'InterestNote'
+export type NoticeChannel = 'Print' | 'Email'
+export type NoticeStatus = 'Issued' | 'Sent' | 'Failed'
+export interface OverdueItem {
+  invoiceId: string; number: string; contractorId: string; contractorName: string; contractorEmail?: string | null
+  issueDate: string; dueDate: string; gross: number; remaining: number; daysOverdue: number; interest?: number | null
+}
+export interface OverdueDto { items: OverdueItem[]; interestError?: string | null }
+export interface NoticeRequest { contractorId: string; invoiceIds?: string[]; kind: NoticeKind; asOf: string; paymentDays: number; includeInterest: boolean }
+export interface NoticeLine {
+  invoiceId: string; number: string; issueDate: string; dueDate: string; amountDue: number; principal: number; days: number; interest: number; rateInfo: string
+}
+export interface NoticeDraft {
+  contractorId: string; contractorName: string; contractorEmail?: string | null; kind: NoticeKind; asOf: string; deadline: string
+  lines: NoticeLine[]; principal: number; interest: number; total: number; subject: string; body: string
+}
+export interface NoticeListItem {
+  id: string; contractorId: string; contractorName: string; kind: NoticeKind; channel: NoticeChannel; status: NoticeStatus; createdAt: string
+  createdBy: string; calculationDate: string; principal: number; interest: number; sentTo?: string | null; error?: string | null; invoiceCount: number
+}
+export interface NoticeParty { name: string; nip?: string | null; address?: string | null; bankAccount?: string | null; email?: string | null }
+export interface NoticeDoc {
+  id: string; kind: NoticeKind; channel: NoticeChannel; status: NoticeStatus; createdAt: string; calculationDate: string; paymentDeadline: string
+  issuer: NoticeParty; recipient: NoticeParty; lines: NoticeLine[]; principal: number; interest: number; total: number; subject: string; body: string
+}
+export interface MailSettingsDto {
+  configured: boolean; host: string; port: number; useTls: boolean; userName?: string | null; hasPassword: boolean; fromAddress: string; fromName?: string | null
+  reminderSubject: string; reminderBody: string; interestSubject: string; interestBody: string
+}
+export interface InterestRateDto { id: string; validFrom: string; annualPercent: number; note?: string | null }

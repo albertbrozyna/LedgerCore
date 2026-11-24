@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection;
 using System.Security.Cryptography;
 using Carter;
 using LedgerCore.Api.Common.Extensions;
@@ -30,6 +31,8 @@ if (string.IsNullOrWhiteSpace(builder.Configuration["Jwt:SecretKey"]))
     builder.Configuration["Jwt:SecretKey"] = File.ReadAllText(keyFile).Trim();
 }
 
+// klucze szyfrowania sekretów (np. hasło SMTP) leżą w folderze danych, obok bazy
+builder.Services.AddDataProtection().SetApplicationName("LedgerCore").PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(dataDir, "keys")));
 builder.Services.AddCarter().AddPersistence(builder.Configuration).AddInfrastructure(builder.Configuration)
     .AddIdentity(builder.Configuration)
     .AddAuth(builder.Configuration).AddVersioning(builder.Configuration).AddSwagger()

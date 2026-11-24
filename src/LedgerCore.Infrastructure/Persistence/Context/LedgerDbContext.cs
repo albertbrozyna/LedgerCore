@@ -35,6 +35,10 @@ public class LedgerDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     public DbSet<UserCompany> UserCompanies { get; set; }
     public DbSet<Attachment> Attachments { get; set; }
     public DbSet<TransactionTemplate> TransactionTemplates { get; set; }
+    public DbSet<InterestRate> InterestRates { get; set; }
+    public DbSet<MailSettings> MailSettings { get; set; }
+    public DbSet<CollectionNotice> CollectionNotices { get; set; }
+    public DbSet<CollectionNoticeInvoice> CollectionNoticeInvoices { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

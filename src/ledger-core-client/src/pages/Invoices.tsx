@@ -216,6 +216,7 @@ export function InvoicePage() {
 
   const cash = accounts.data?.filter(a => a.type === 'Asset') ?? []
   const attachments = useLoad(() => api.attachments(id!), [id])
+  const notices = useLoad(() => api.notices({ invoiceId: id }), [id])
 
   async function upload(file: File | undefined) {
     if (!file) return
@@ -312,6 +313,19 @@ export function InvoicePage() {
               </tbody>
             </table>
           )}
+          {notices.data && notices.data.length > 0 && <>
+            <h2>Historia windykacji</h2>
+            <table aria-label="Historia windykacji">
+              <thead><tr><th>Data</th><th>Dokument</th><th>Sposób</th><th>Status</th><th></th></tr></thead>
+              <tbody>
+                {notices.data.map(n => (
+                  <tr key={n.id}><td>{fmtDate(n.createdAt)}</td><td>{n.kind === 'Reminder' ? 'Wezwanie do zapłaty' : 'Nota odsetkowa'}</td>
+                    <td>{n.channel === 'Email' ? `e-mail (${n.sentTo ?? ''})` : 'wydruk'}</td><td>{n.status === 'Sent' ? 'wysłano' : n.status === 'Failed' ? 'błąd wysyłki' : 'wystawiono'}</td>
+                    <td><Link to={`/collections/notices/${n.id}`}>pokaż</Link></td></tr>
+                ))}
+              </tbody>
+            </table>
+          </>}
           <h2>Załączniki</h2>
           {attachments.data && attachments.data.length === 0 && <p className="muted">Brak załączników (np. skan faktury dostawcy).</p>}
           <ul className="attachments" aria-label="Załączniki">

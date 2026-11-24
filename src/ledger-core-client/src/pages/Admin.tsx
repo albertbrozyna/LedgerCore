@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth'
+import { InterestRatesSection, MailSettingsSection } from './AdminCollections'
 import { accountingModeLabel } from '../format'
 import { api, type AccountingMode, type AuditItem, type CompanyDto } from '../api'
 import { fmtDate } from '../format'
@@ -100,6 +101,9 @@ export function AdminPage() {
         </label>
         <Button disabled={newMode === mode} onClick={changeMode}>Zmień tryb</Button>
       </div>
+
+      <MailSettingsSection onError={setError} onNotice={setNotice} />
+      <InterestRatesSection onError={setError} onNotice={setNotice} />
 
       <h2>Kopie zapasowe</h2>
       <div className="card">

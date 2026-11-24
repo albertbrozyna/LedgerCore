@@ -21,6 +21,10 @@ namespace LedgerCore.Application.Common.Interfaces
         DbSet<UserCompany> UserCompanies { get; }
         DbSet<Attachment> Attachments { get; }
         DbSet<TransactionTemplate> TransactionTemplates { get; }
+        DbSet<InterestRate> InterestRates { get; }
+        DbSet<MailSettings> MailSettings { get; }
+        DbSet<CollectionNotice> CollectionNotices { get; }
+        DbSet<CollectionNoticeInvoice> CollectionNoticeInvoices { get; }
 
         /// <summary>Firma bieżącego żądania (z nagłówka X-Company-Id).</summary>
         Guid CurrentCompanyId { get; }
