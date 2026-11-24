@@ -1,5 +1,5 @@
 import { download, json, qs } from './http'
-import type { AuditList, BackupItem, CompanyDto, Role, UserInfo } from './types'
+import type { AccountingMode, AuditList, BackupItem, CompanyDto, Role, UserInfo } from './types'
 
 /** Użytkownicy, dane firmy, blokada okresu, zamknięcie roku, audyt i kopie zapasowe. */
 export const adminApi = {
@@ -12,6 +12,7 @@ export const adminApi = {
   changePassword: (currentPassword: string, newPassword: string) => json<void>('POST', '/auth/change-password', { currentPassword, newPassword }),
 
   company: () => json<CompanyDto>('GET', '/admin/company'),
+  setAccountingMode: (mode: AccountingMode) => json<void>('PUT', '/admin/accounting-mode', { mode }),
   saveCompany: (b: CompanyDto) => json<void>('PUT', '/admin/company', b),
   closeYear: (year: number) => json<{ number: string; result: number }>('POST', '/admin/close-year', { year }),
   periodLock: () => json<{ lockedThrough?: string | null }>('GET', '/admin/period-lock'),

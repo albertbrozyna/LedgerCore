@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
-import { api, companyStore, setUnauthorizedHandler, tokens, type CompanyListItem, type Role, type UserInfo } from './api'
+import { api, companyStore, setUnauthorizedHandler, tokens, type AccountingMode, type CompanyListItem, type Role, type UserInfo } from './api'
 
 interface AuthState {
   user: UserInfo | null
@@ -8,6 +8,9 @@ interface AuthState {
   logout: () => void
   canWrite: boolean
   isAdmin: boolean
+  /** Tryb ewidencji bieżącej firmy; `fullBooks` = pełna księgowość (konta, dziennik, bilans). */
+  mode: AccountingMode
+  fullBooks: boolean
   /** Firmy dostępne dla użytkownika i aktualnie wybrana (wszystkie dane w aplikacji dotyczą tej firmy). */
   companies: CompanyListItem[]
   company: CompanyListItem | null
@@ -57,9 +60,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const role: Role | undefined = user?.role
+  const current = companies.find(c => c.id === companyId) ?? null
+  const mode: AccountingMode = current?.accountingMode ?? 'FullBooks'
   return (
     <Ctx.Provider value={{
-      user, loading, login, logout, canWrite: role === 'Admin' || role === 'Accountant', isAdmin: role === 'Admin',
+      user, loading, login, logout, canWrite: role === 'Admin' || role === 'Accountant', isAdmin: role === 'Admin', mode, fullBooks: mode === 'FullBooks',
       companies, company: companies.find(c => c.id === companyId) ?? null, switchCompany,
     }}>
       {children}

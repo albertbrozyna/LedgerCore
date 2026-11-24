@@ -21,12 +21,15 @@ import { BankImportPage } from './pages/BankImport'
 import { InvoicePrintPage } from './pages/InvoicePrint'
 import { DesignCatalogPage } from './pages/DesignCatalog'
 import { CommandPalette, ShortcutHelp } from './CommandPalette'
+import { RegisterPage } from './pages/Register'
 import { useGlobalShortcuts } from './shortcuts'
 
-const navGroups: { title: string; adminOnly?: boolean; items: { to: string; label: string; end?: boolean }[] }[] = [
+interface NavItem { to: string; label: string; end?: boolean; /** tylko pełna księgowość */ full?: boolean; /** tylko KPiR / ryczałt */ register?: boolean }
+const navGroups: { title: string; adminOnly?: boolean; items: NavItem[] }[] = [
   { title: 'Księga', items: [
-    { to: '/transactions', label: 'Dziennik', end: true }, { to: '/transactions/new', label: 'Nowe księgowanie' },
-    { to: '/bank-import', label: 'Import wyciągu' }, { to: '/accounts', label: 'Plan kont' } ] },
+    { to: '/register', label: 'Ewidencja', register: true },
+    { to: '/transactions', label: 'Dziennik', end: true, full: true }, { to: '/transactions/new', label: 'Nowe księgowanie', full: true },
+    { to: '/bank-import', label: 'Import wyciągu', full: true }, { to: '/accounts', label: 'Plan kont', full: true } ] },
   { title: 'Sprzedaż i zakupy', items: [{ to: '/invoices', label: 'Faktury' }, { to: '/contractors', label: 'Kontrahenci' }] },
   { title: 'Zestawienia', items: [{ to: '/reports', label: 'Raporty' }] },
   { title: 'Zarządzanie', adminOnly: true, items: [
@@ -52,7 +55,7 @@ function PeriodBadge() {
 }
 
 function Shell({ children }: { children: ReactNode }) {
-  const { user, logout, isAdmin, canWrite, companies, company, switchCompany } = useAuth()
+  const { user, logout, isAdmin, canWrite, companies, company, switchCompany, mode, fullBooks } = useAuth()
   const { theme, cycle } = useTheme()
   const nav = useNavigate()
   const [palette, setPalette] = useState(false)
@@ -60,7 +63,7 @@ function Shell({ children }: { children: ReactNode }) {
   useGlobalShortcuts({
     onPalette: () => setPalette(p => !p),
     onHelp: () => setHelp(true),
-    onNewTransaction: canWrite ? () => nav('/transactions/new') : undefined,
+    onNewTransaction: canWrite && fullBooks ? () => nav('/transactions/new') : undefined,
     onNewInvoice: canWrite ? () => nav('/invoices/new?type=Sales') : undefined,
     onCompanyStep: d => {
       if (companies.length < 2) return
@@ -83,7 +86,7 @@ function Shell({ children }: { children: ReactNode }) {
           {navGroups.filter(g => !g.adminOnly || isAdmin).map(g => (
             <div key={g.title} role="group" aria-label={g.title}>
               <div className="nav-group-title" aria-hidden="true">{g.title}</div>
-              {g.items.map(i => <NavLink key={i.to} to={i.to} end={i.end} title={i.label}><span className="nav-label">{i.label}</span><span className="sr-only">{collapsed ? i.label : ''}</span></NavLink>)}
+              {g.items.filter(i => (!i.full || fullBooks) && (!i.register || !fullBooks)).map(i => <NavLink key={i.to} to={i.to} end={i.end} title={i.label}><span className="nav-label">{i.register ? (mode === 'Kpir' ? 'KPiR' : 'Ewidencja ryczałtu') : i.label}</span><span className="sr-only">{collapsed ? i.label : ''}</span></NavLink>)}
             </div>
           ))}
         </nav>
@@ -128,6 +131,17 @@ function Protected({ children }: { children: ReactNode }) {
   return <Shell>{children}</Shell>
 }
 
+/** Strony pełnej księgowości (konta, dziennik, import wyciągu) – w KPiR i ryczałcie przekierowują na pulpit. */
+function FullBooksOnly({ children }: { children: ReactNode }) {
+  const { fullBooks } = useAuth()
+  return fullBooks ? <>{children}</> : <Navigate to="/dashboard" replace />
+}
+
+function RegisterOnly({ children }: { children: ReactNode }) {
+  const { fullBooks } = useAuth()
+  return fullBooks ? <Navigate to="/dashboard" replace /> : <>{children}</>
+}
+
 function AdminOnly({ children }: { children: ReactNode }) {
   const { isAdmin } = useAuth()
   return isAdmin ? <>{children}</> : <Navigate to="/dashboard" replace />
@@ -152,21 +166,22 @@ export default function App() {
           <Route path="/setup" element={<SetupPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/dashboard" element={<Protected><DashboardPage /></Protected>} />
-          <Route path="/accounts" element={<Protected><AccountsPage /></Protected>} />
-          <Route path="/accounts/:id/ledger" element={<Protected><LedgerPage /></Protected>} />
-          <Route path="/transactions" element={<Protected><JournalPage /></Protected>} />
-          <Route path="/transactions/new" element={<Protected><NewTransactionPage /></Protected>} />
-          <Route path="/transactions/:id" element={<Protected><TransactionPage /></Protected>} />
+          <Route path="/accounts" element={<Protected><FullBooksOnly><AccountsPage /></FullBooksOnly></Protected>} />
+          <Route path="/accounts/:id/ledger" element={<Protected><FullBooksOnly><LedgerPage /></FullBooksOnly></Protected>} />
+          <Route path="/transactions" element={<Protected><FullBooksOnly><JournalPage /></FullBooksOnly></Protected>} />
+          <Route path="/transactions/new" element={<Protected><FullBooksOnly><NewTransactionPage /></FullBooksOnly></Protected>} />
+          <Route path="/transactions/:id" element={<Protected><FullBooksOnly><TransactionPage /></FullBooksOnly></Protected>} />
           <Route path="/invoices" element={<Protected><InvoicesPage /></Protected>} />
           <Route path="/invoices/new" element={<Protected><NewInvoicePage /></Protected>} />
           <Route path="/invoices/:id" element={<Protected><InvoicePage /></Protected>} />
           <Route path="/invoices/:id/print" element={<Protected><InvoicePrintPage /></Protected>} />
           <Route path="/contractors" element={<Protected><ContractorsPage /></Protected>} />
           <Route path="/my-account" element={<Protected><MyAccountPage /></Protected>} />
-          <Route path="/bank-import" element={<Protected><BankImportPage /></Protected>} />
+          <Route path="/bank-import" element={<Protected><FullBooksOnly><BankImportPage /></FullBooksOnly></Protected>} />
           <Route path="/companies" element={<Protected><AdminOnly><CompaniesPage /></AdminOnly></Protected>} />
           <Route path="/invoices/:id/correction" element={<Protected><CorrectionPage /></Protected>} />
           <Route path="/admin" element={<Protected><AdminOnly><AdminPage /></AdminOnly></Protected>} />
+          <Route path="/register" element={<Protected><RegisterOnly><RegisterPage /></RegisterOnly></Protected>} />
           <Route path="/reports" element={<Protected><ReportsPage /></Protected>} />
           <Route path="/users" element={<Protected><AdminOnly><UsersPage /></AdminOnly></Protected>} />
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -27,7 +27,7 @@ export const roleLabel: Record<Role, string> = {
   Admin: 'Administrator', Accountant: 'Księgowy', Viewer: 'Podgląd',
 }
 
-import type { InvoiceStatus, InvoiceType, VatRate } from './api'
+import type { AccountingMode, InvoiceStatus, InvoiceType, KpirKind, VatRate } from './api'
 export const vatRateLabel: Record<VatRate, string> = { R23: '23%', R8: '8%', R5: '5%', R0: '0%', Exempt: 'zw.' }
 export const vatPercent: Record<VatRate, number> = { R23: 23, R8: 8, R5: 5, R0: 0, Exempt: 0 }
 export const invoiceTypeLabel: Record<InvoiceType, string> = { Sales: 'Sprzedaż', Purchase: 'Zakup' }
@@ -37,3 +37,14 @@ export const addDaysIso = (iso: string, days: number) => {
   const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + days)
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
+
+export const accountingModeLabel: Record<AccountingMode, string> = { FullBooks: 'Pełna księgowość', Kpir: 'KPiR', Ryczalt: 'Ryczałt' }
+export const kpirKindLabel: Record<KpirKind, string> = {
+  Revenue: 'Przychód ze sprzedaży towarów i usług (kol. 7)', OtherRevenue: 'Pozostałe przychody (kol. 8)',
+  GoodsPurchase: 'Zakup towarów handlowych i materiałów (kol. 10)', PurchaseCosts: 'Koszty uboczne zakupu (kol. 11)',
+  OtherExpense: 'Pozostałe wydatki (kol. 13)', Research: 'Koszty B+R (kol. 13 i 16)',
+}
+export const salesKinds: KpirKind[] = ['Revenue', 'OtherRevenue']
+export const purchaseKinds: KpirKind[] = ['GoodsPurchase', 'PurchaseCosts', 'OtherExpense', 'Research']
+/** Dozwolone stawki ryczałtu ewidencjonowanego (%). */
+export const ryczaltRates = [2, 3, 5.5, 8.5, 10, 12, 12.5, 14, 15, 17, 20]

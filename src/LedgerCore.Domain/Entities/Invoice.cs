@@ -82,6 +82,10 @@ public class Invoice : ICompanyOwned
     public decimal CorrectedAmount { get; private set; }
     public bool IsCorrection => CorrectedInvoiceId != null;
     public string? Notes { get; private set; }
+    /// <summary>Klasyfikacja w KPiR (tylko firmy prowadzące KPiR; w pełnej księgowości null).</summary>
+    public KpirKind? KpirKind { get; private set; }
+    /// <summary>Stawka ryczałtu w % (tylko sprzedaż w firmach na ryczałcie).</summary>
+    public decimal? RyczaltRate { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public Guid? CreatedByUserId { get; private set; }
 
@@ -111,6 +115,12 @@ public class Invoice : ICompanyOwned
     }
 
     public void LinkTransaction(Guid transactionId) => TransactionId = transactionId;
+
+    public void SetTaxClassification(KpirKind? kind, decimal? ryczaltRate)
+    {
+        KpirKind = kind;
+        RyczaltRate = ryczaltRate;
+    }
 
     public Payment AddPayment(DateTime date, decimal amount, Guid accountId, Guid transactionId)
     {

@@ -1,6 +1,7 @@
 using FluentValidation;
 using LedgerCore.Application.Common.Interfaces;
 using LedgerCore.Application.Common.Ledger;
+using LedgerCore.Application.Features.Registers;
 using LedgerCore.Application.Features.Transactions.Commands.Create;
 using LedgerCore.Domain.Entities;
 using LedgerCore.Domain.Enums;
@@ -29,7 +30,8 @@ public static class CreateInvoice
     public record LineDto(string Description, decimal Net, VatRate VatRate);
 
     public record Command(InvoiceType Type, string? Number, Guid ContractorId, DateTime IssueDate, DateTime? SaleDate,
-        DateTime DueDate, Guid? ResultAccountId, string? Notes, List<LineDto> Lines) : IRequest<Result>;
+        DateTime DueDate, Guid? ResultAccountId, string? Notes, List<LineDto> Lines,
+        KpirKind? Kind = null, decimal? RyczaltRate = null) : IRequest<Result>;
 
     public record Result(Guid InvoiceId, string Number, Guid TransactionId);
 
@@ -60,6 +62,8 @@ public static class CreateInvoice
                              ?? throw new DomainValidationException("Nie znaleziono kontrahenta");
             if (!contractor.IsActive) throw new DomainValidationException("Kontrahent jest nieaktywny");
             await PeriodGuard.EnsureOpen(db, r.IssueDate, ct);
+            var mode = await CompanyMode.Get(db, ct);
+            if (mode != AccountingMode.FullBooks) return await RegisterOnly(r, mode, ct);
 
             var sales = r.Type == InvoiceType.Sales;
             Account result;
@@ -115,6 +119,29 @@ public static class CreateInvoice
             return new Result(invoice.Id, invoice.Number, tx.Id);
         }
 
+        /// <summary>KPiR / ryczałt: faktura trafia do ewidencji bez księgowania na konta (ewidencja jest widokiem nad fakturami).</summary>
+        async Task<Result> RegisterOnly(Command r, AccountingMode mode, CancellationToken ct)
+        {
+            var sales = r.Type == InvoiceType.Sales;
+            var (kind, rate) = RegisterRules.Classify(mode, r.Type, r.Kind, r.RyczaltRate);
+            string number;
+            if (sales) number = await NextSalesNumber(db, r.IssueDate, ct);
+            else
+            {
+                number = r.Number?.Trim() ?? "";
+                if (number.Length == 0) throw new DomainValidationException("Numer faktury zakupu jest wymagany");
+                if (await db.Invoices.AnyAsync(i => i.Type == InvoiceType.Purchase && i.ContractorId == r.ContractorId && i.Number == number, ct))
+                    throw new DomainValidationException($"Faktura {number} tego kontrahenta jest już zarejestrowana");
+            }
+            var invoice = new Invoice(r.Type, number, r.ContractorId, r.IssueDate, r.SaleDate ?? r.IssueDate, r.DueDate,
+                Guid.Empty, r.Notes, me.User?.Id, r.Lines.Select(l => (l.Description, l.Net, l.VatRate)));
+            invoice.SetTaxClassification(kind, rate);
+            db.Invoices.Add(invoice);
+            await audit.Add("Faktura", $"Zarejestrowano fakturę {invoice.Number} ({(sales ? "sprzedaży" : "zakupu")}) w ewidencji {(mode == AccountingMode.Kpir ? "KPiR" : "ryczałtu")}, netto {invoice.Net:0.00}", ct);
+            await db.SaveChangesAsync(ct);
+            return new Result(invoice.Id, invoice.Number, Guid.Empty);
+        }
+
         static async Task<string> NextSalesNumber(IAppDbContext db, DateTime date, CancellationToken ct)
         {
             var prefix = $"FV/{date.Year}/";
@@ -135,7 +162,6 @@ public static class RecordPayment
         public Validator()
         {
             RuleFor(x => x.Amount).GreaterThan(0).WithMessage("Kwota płatności musi być większa od zera");
-            RuleFor(x => x.AccountId).NotEmpty().WithMessage("Wybierz konto kasy/banku");
         }
     }
 
@@ -147,6 +173,16 @@ public static class RecordPayment
                           .FirstOrDefaultAsync(i => i.Id == r.InvoiceId, ct)
                       ?? throw new DomainValidationException("Nie znaleziono faktury");
             await PeriodGuard.EnsureOpen(db, r.Date, ct);
+
+            if (await CompanyMode.Get(db, ct) != AccountingMode.FullBooks)
+            {
+                // KPiR / ryczałt: płatność jest tylko adnotacją o rozliczeniu faktury (bez konta kasy/banku i bez księgowania)
+                db.Payments.Add(inv.AddPayment(r.Date, r.Amount, Guid.Empty, Guid.Empty));
+                await audit.Add("Płatność", $"Zarejestrowano płatność {r.Amount:0.00} do faktury {inv.Number}", ct);
+                await db.SaveChangesAsync(ct);
+                return Unit.Value;
+            }
+            if (r.AccountId == Guid.Empty) throw new DomainValidationException("Wybierz konto kasy/banku");
 
             var cash = await db.Accounts.FirstOrDefaultAsync(a => a.Id == r.AccountId, ct)
                        ?? throw new DomainValidationException("Nie znaleziono konta kasy/banku");
@@ -190,6 +226,13 @@ public static class CancelInvoice
             }
             inv.Cancel(); // rzuca, jeśli są płatności lub już anulowana
 
+            if (inv.TransactionId == null)
+            {
+                // KPiR / ryczałt: faktura nie ma księgowania – anulowana znika z ewidencji
+                await audit.Add("Faktura", $"Anulowano fakturę {inv.Number}", ct);
+                await db.SaveChangesAsync(ct);
+                return Unit.Value;
+            }
             var today = DateTime.Today;
             await PeriodGuard.EnsureOpen(db, today, ct);
             var original = await db.Transactions.Include(t => t.Entries).FirstAsync(t => t.Id == inv.TransactionId, ct);

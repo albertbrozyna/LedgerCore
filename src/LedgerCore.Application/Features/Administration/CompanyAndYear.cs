@@ -12,7 +12,8 @@ namespace LedgerCore.Application.Features.Administration;
 public static class GetCompany
 {
     public record Query : IRequest<Response>;
-    public record Response(string Name, string? Nip, string? Address, string? Email, string? Phone, string? BankAccount, string? InvoiceFooter);
+    public record Response(string Name, string? Nip, string? Address, string? Email, string? Phone, string? BankAccount, string? InvoiceFooter,
+        AccountingMode AccountingMode = AccountingMode.FullBooks);
 
     public class Handler(IAppDbContext db, ICompanyContext company) : IRequestHandler<Query, Response>
     {
@@ -20,7 +21,7 @@ public static class GetCompany
         {
             var c = await db.Companies.AsNoTracking().FirstOrDefaultAsync(x => x.Id == company.CompanyId, ct);
             return c is null ? new Response("", null, null, null, null, null, null)
-                : new Response(c.Name, c.Nip, c.Address, c.Email, c.Phone, c.BankAccount, c.InvoiceFooter);
+                : new Response(c.Name, c.Nip, c.Address, c.Email, c.Phone, c.BankAccount, c.InvoiceFooter, c.AccountingMode);
         }
     }
 }
@@ -58,6 +59,31 @@ public static class SaveCompany
 }
 
 /// <summary>
+/// Zmiana trybu ewidencji bieżącej firmy (pełna księgowość / KPiR / ryczałt). Zablokowana, gdy firma ma już faktury lub księgowania –
+/// dane zapisane w jednym trybie nie dają się bezpiecznie przeliczyć na inny (faktury w KPiR nie mają księgowań, a w pełnej księgowości mają).
+/// </summary>
+public static class SetAccountingMode
+{
+    public record Command(AccountingMode Mode) : IRequest<Unit>;
+
+    public class Handler(IAppDbContext db, AuditLog audit) : IRequestHandler<Command, Unit>
+    {
+        public async Task<Unit> Handle(Command r, CancellationToken ct)
+        {
+            if (!Enum.IsDefined(r.Mode)) throw new DomainValidationException("Nieprawidłowy tryb ewidencji");
+            var c = await db.Companies.FirstOrDefaultAsync(x => x.Id == db.CurrentCompanyId, ct) ?? throw new DomainValidationException("Nie wybrano firmy");
+            if (c.AccountingMode == r.Mode) return Unit.Value;
+            if (await db.Invoices.AnyAsync(ct) || await db.Transactions.AnyAsync(ct))
+                throw new DomainValidationException("Nie można zmienić trybu ewidencji firmy, która ma już faktury lub księgowania – załóż nową firmę w odpowiednim trybie");
+            c.SetAccountingMode(r.Mode);
+            await audit.Add("Dane firmy", $"Zmieniono tryb ewidencji firmy {c.Name} na {r.Mode}", ct);
+            await db.SaveChangesAsync(ct);
+            return Unit.Value;
+        }
+    }
+}
+
+/// <summary>
 /// Zamknięcie roku obrotowego: konta przychodów i kosztów są zerowane księgowaniem „ZR/rok/0001” z 31 grudnia,
 /// a wynik trafia na konto 860 „Wynik finansowy” (tworzone, jeśli go brak). Następnie okres jest blokowany do 31 grudnia.
 /// Salda kont bilansowych przechodzą na nowy rok automatycznie (księga jest ciągła).
@@ -74,6 +100,7 @@ public static class CloseYear
     {
         public async Task<Response> Handle(Command r, CancellationToken ct)
         {
+            await CompanyMode.RequireFullBooks(db, ct);
             if (r.Year < 2000 || r.Year > DateTime.Today.Year) throw new DomainValidationException("Nieprawidłowy rok");
             var end = new DateTime(r.Year, 12, 31);
             var number = Number(r.Year);

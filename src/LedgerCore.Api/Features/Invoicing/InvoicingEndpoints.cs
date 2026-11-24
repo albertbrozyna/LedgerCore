@@ -14,6 +14,7 @@ namespace LedgerCore.Api.Features.Invoicing
     public record PeriodLockBody(DateTime? LockedThrough);
     public record CompanyBody(string Name, string? Nip, string? Address, string? Email, string? Phone, string? BankAccount, string? InvoiceFooter);
     public record CloseYearBody(int Year);
+    public record AccountingModeBody(LedgerCore.Domain.Enums.AccountingMode Mode);
 
     public class InvoicingEndpoints : ICarterModule
     {
@@ -73,6 +74,11 @@ namespace LedgerCore.Api.Features.Invoicing
             admin.MapPut("company", async (CompanyBody b, ISender s, CancellationToken ct) =>
             {
                 await s.Send(new SaveCompany.Command(b.Name, b.Nip, b.Address, b.Email, b.Phone, b.BankAccount, b.InvoiceFooter), ct);
+                return Results.NoContent();
+            }).RequireAuthorization(Policies.AdminOnly);
+            admin.MapPut("accounting-mode", async (AccountingModeBody b, ISender s, CancellationToken ct) =>
+            {
+                await s.Send(new SetAccountingMode.Command(b.Mode), ct);
                 return Results.NoContent();
             }).RequireAuthorization(Policies.AdminOnly);
             admin.MapPost("close-year", async (CloseYearBody b, ISender s, CancellationToken ct) =>

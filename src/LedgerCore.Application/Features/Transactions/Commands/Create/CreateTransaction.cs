@@ -35,6 +35,7 @@ public static class CreateTransaction
     {
         public async Task<Result> Handle(Command request, CancellationToken ct)
         {
+            await LedgerCore.Application.Common.Ledger.CompanyMode.RequireFullBooks(db, ct);
             var accountIds = request.Entries.Select(e => e.AccountId).Distinct().ToList();
             var accounts = await db.Accounts.Where(a => accountIds.Contains(a.Id)).ToListAsync(ct);
 

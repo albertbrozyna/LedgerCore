@@ -96,13 +96,13 @@ public static class GetInvoice
 {
     public record Query(Guid Id) : IRequest<Response>;
     public record LineItem(string Description, decimal Net, VatRate VatRate, decimal Vat, decimal Gross);
-    public record PaymentItem(Guid Id, DateTime Date, decimal Amount, string AccountCode, string AccountName, Guid TransactionId);
+    public record PaymentItem(Guid Id, DateTime Date, decimal Amount, string AccountCode, string AccountName, Guid? TransactionId);
     public record Response(Guid Id, InvoiceType Type, string Number, Guid ContractorId, string ContractorName, string? ContractorNip,
         DateTime IssueDate, DateTime SaleDate, DateTime DueDate, decimal Net, decimal Vat, decimal Gross, decimal PaidAmount,
         decimal Remaining, string Status, string? Notes, Guid? TransactionId, string? TransactionNumber,
         List<LineItem> Lines, List<PaymentItem> Payments,
         bool IsCorrection, Guid? CorrectedInvoiceId, string? CorrectedNumber, decimal CorrectedAmount, decimal GrossAfterCorrections,
-        List<CorrectionItem> Corrections);
+        List<CorrectionItem> Corrections, KpirKind? KpirKind = null, decimal? RyczaltRate = null);
     public record CorrectionItem(Guid Id, string Number, DateTime IssueDate, decimal Gross, bool IsCanceled);
 
     public class Handler(IAppDbContext db) : IRequestHandler<Query, Response>
@@ -123,10 +123,11 @@ public static class GetInvoice
                 i.DueDate, i.Net, i.Vat, i.Gross, i.PaidAmount, i.Remaining, InvoiceStatus.Of(i, DateTime.Today), i.Notes,
                 i.TransactionId, txNumber,
                 i.Lines.Select(l => new LineItem(l.Description, l.Net, l.VatRate, l.Vat, l.Gross)).ToList(),
-                i.Payments.OrderBy(p => p.Date).Select(p => new PaymentItem(p.Id, p.Date, p.Amount, accounts[p.AccountId].Code,
-                    accounts[p.AccountId].Name, p.TransactionId)).ToList(),
+                i.Payments.OrderBy(p => p.Date).Select(p => accounts.TryGetValue(p.AccountId, out var acc)
+                    ? new PaymentItem(p.Id, p.Date, p.Amount, acc.Code, acc.Name, p.TransactionId)
+                    : new PaymentItem(p.Id, p.Date, p.Amount, "", "", null)).ToList(),
                 i.IsCorrection, i.CorrectedInvoiceId, correctedNumber, i.CorrectedAmount, i.Gross + i.CorrectedAmount,
-                corrections.Select(c => new CorrectionItem(c.Id, c.Number, c.IssueDate, c.Gross, c.IsCanceled)).ToList());
+                corrections.Select(c => new CorrectionItem(c.Id, c.Number, c.IssueDate, c.Gross, c.IsCanceled)).ToList(), i.KpirKind, i.RyczaltRate);
         }
     }
 }

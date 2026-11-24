@@ -22,6 +22,9 @@ namespace LedgerCore.Application.Common.Interfaces
         DbSet<Attachment> Attachments { get; }
         DbSet<TransactionTemplate> TransactionTemplates { get; }
 
+        /// <summary>Firma bieżącego żądania (z nagłówka X-Company-Id).</summary>
+        Guid CurrentCompanyId { get; }
+
         Task<int> SaveChangesAsync(CancellationToken cancellationToken);
     }
 }

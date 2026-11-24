@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
-import { api, type AuditItem, type CompanyDto } from '../api'
+import { useAuth } from '../auth'
+import { accountingModeLabel } from '../format'
+import { api, type AccountingMode, type AuditItem, type CompanyDto } from '../api'
 import { fmtDate } from '../format'
 import { Button, DataTable, ErrorBox, Loading, Notice, PageHeader, type Column, type SortState, useDialogs, useLoad } from '../design'
 
 export function AdminPage() {
+  const { fullBooks, mode } = useAuth()
+  const [newMode, setNewMode] = useState<AccountingMode>(mode)
   const { confirm } = useDialogs()
   const lock = useLoad(() => api.periodLock(), [])
   const [date, setDate] = useState('')
@@ -34,6 +38,13 @@ export function AdminPage() {
   async function createBackup() {
     setError(''); setNotice('')
     try { const r = await api.createBackup(); setNotice(`Utworzono kopię zapasową ${r.name}`); backups.reload(); audit.reload() } catch (err) { setError((err as Error).message) }
+  }
+
+  async function changeMode() {
+    if (newMode === mode) return
+    if (!await confirm({ title: `Zmienić tryb ewidencji na „${accountingModeLabel[newMode]}”?`, message: 'Zmiana jest możliwa tylko w firmie bez faktur i księgowań. Zmieni się menu i sposób rejestracji faktur (KPiR i ryczałt nie księgują na konta).', confirmLabel: 'Zmień tryb' })) return
+    setError(''); setNotice('')
+    try { await api.setAccountingMode(newMode); window.location.assign('/admin') } catch (err) { setError((err as Error).message) }
   }
 
   async function closeYear() {
@@ -79,6 +90,17 @@ export function AdminPage() {
         </div>
       </form>
 
+      <h2>Tryb ewidencji</h2>
+      <div className="card form-row">
+        <p className="grow flush">Obecnie: <strong data-testid="accounting-mode">{accountingModeLabel[mode]}</strong>. Pełna księgowość księguje faktury na konta; KPiR i ryczałt prowadzą ewidencję nad fakturami (bez planu kont, dziennika i bilansu).</p>
+        <label>Tryb ewidencji
+          <select value={newMode} onChange={e => setNewMode(e.target.value as AccountingMode)}>
+            {(['FullBooks', 'Kpir', 'Ryczalt'] as AccountingMode[]).map(m => <option key={m} value={m}>{accountingModeLabel[m]}</option>)}
+          </select>
+        </label>
+        <Button disabled={newMode === mode} onClick={changeMode}>Zmień tryb</Button>
+      </div>
+
       <h2>Kopie zapasowe</h2>
       <div className="card">
         <p>Aplikacja tworzy kopię bazy automatycznie raz dziennie (przechowywanych jest ostatnich 14). Zalecamy też regularne kopiowanie
@@ -114,12 +136,12 @@ export function AdminPage() {
         </div>
       </div>
 
-      <h2>Zamknięcie roku obrotowego</h2>
+      {fullBooks && <><h2>Zamknięcie roku obrotowego</h2>
       <div className="card form-row">
         <p className="grow flush">Zeruje konta przychodów i kosztów, przenosi wynik na konto 860 „Wynik finansowy”, blokuje księgowanie do 31 grudnia i przenosi salda bilansowe na nowy rok.</p>
         <label>Rok<input type="number" min={2000} max={2100} value={year} onChange={e => setYear(e.target.value)} className="w-6" /></label>
         <Button variant="danger"  onClick={closeYear}>Zamknij rok</Button>
-      </div>
+      </div></>}
 
       <h2>Dziennik zdarzeń (audyt)</h2>
       <div className="card form-row">

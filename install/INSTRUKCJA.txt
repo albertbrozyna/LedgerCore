@@ -41,6 +41,13 @@ SZYBKIE KSIĘGOWANIE
   przechodzi dalej (w ostatnim polu - dodaje wiersz), Ctrl+Enter księguje. Pod formularzem widać saldo wybranych kont
   przed i po księgowaniu. "Kopiuj jako nowe" (na liście i w szczegółach) tworzy nowe księgowanie z datą dzisiejszą.
 
+KPIR I RYCZAŁT
+  Przy dodawaniu firmy (menu "Firmy") wybierz "Tryb ewidencji": Pełna księgowość, KPiR albo Ryczałt. Firma w trybie
+  KPiR/ryczałt nie ma planu kont, dziennika ani bilansu - faktury sprzedaży i zakupu trafiają wprost do ewidencji
+  (menu "KPiR" lub "Ewidencja ryczałtu"): kolumny wg wzoru księgi, sumy miesięczne i narastające, eksport CSV i druk.
+  Przy fakturze wybierasz rodzaj wpisu (np. zakup towarów, koszty uboczne) albo stawkę ryczałtu. Kwoty są netto;
+  zaliczka na podatek jest tylko orientacyjna. Trybu nie da się zmienić w firmie, która ma już faktury lub księgowania.
+
 WIELE FIRM (KLIENCI BIURA)
   Menu "Firmy" (Administrator): dodaj firmę klienta - dostanie własny plan kont, faktury, kontrahentów i raporty.
   Aktywną firmę zmieniasz listą "Firma" w lewym menu (widoczna, gdy masz dostęp do więcej niż jednej firmy).

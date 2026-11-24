@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { api, type InvoiceItem, type AttachmentDto, type InvoiceType, type VatRate } from '../api'
+import { api, type KpirKind, type InvoiceItem, type AttachmentDto, type InvoiceType, type VatRate } from '../api'
 import { useAuth } from '../auth'
 import {
-  addDaysIso, fmtDate, fmtMoney, invoiceTypeLabel, parseAmount, round2, statusLabel, todayIso, vatPercent, vatRateLabel, yearStartIso,
+  addDaysIso, fmtDate, fmtMoney, invoiceTypeLabel, kpirKindLabel, parseAmount, purchaseKinds, ryczaltRates, salesKinds, round2, statusLabel, todayIso, vatPercent, vatRateLabel, yearStartIso,
 } from '../format'
 import { Button, DataTable, ErrorBox, Loading, Notice, PageHeader, SavedViews, StatusBadge, type Column, type SortState, useDialogs, useLoad } from '../design'
 
@@ -78,7 +78,7 @@ interface Line { description: string; net: string; vatRate: VatRate }
 const emptyLine = (): Line => ({ description: '', net: '', vatRate: 'R23' })
 
 export function NewInvoicePage() {
-  const { canWrite } = useAuth()
+  const { canWrite, mode, fullBooks } = useAuth()
   const nav = useNavigate()
   const [params] = useSearchParams()
   const type: InvoiceType = params.get('type') === 'Purchase' ? 'Purchase' : 'Sales'
@@ -101,6 +101,8 @@ export function NewInvoicePage() {
   const invalid = parsed.some(p => p.net === null || p.net <= 0)
   const net = round2(parsed.reduce((s, p) => s + (p.net ?? 0), 0))
   const vat = round2(parsed.reduce((s, p) => s + round2(((p.net ?? 0) * vatPercent[p.rate]) / 100), 0))
+  const [kind, setKind] = useState('')
+  const [rate, setRate] = useState('')
   const resultAccounts = accounts.data?.filter(a => (sales ? a.type === 'Income' : a.type === 'Expense')) ?? []
   const update = (i: number, patch: Partial<Line>) => setLines(lines.map((l, j) => (j === i ? { ...l, ...patch } : l)))
 
@@ -112,7 +114,9 @@ export function NewInvoicePage() {
     try {
       const r = await api.createInvoice({
         type, number: sales ? undefined : number, contractorId, issueDate, dueDate, notes,
-        resultAccountId: resultAccountId || undefined,
+        resultAccountId: fullBooks ? resultAccountId || undefined : undefined,
+        kind: mode === 'Kpir' && kind ? (kind as KpirKind) : undefined,
+        ryczaltRate: mode === 'Ryczalt' && sales && rate ? Number(rate) : undefined,
         lines: lines.map((l, i) => ({ description: l.description, net: parsed[i].net!, vatRate: l.vatRate })),
       })
       nav(`/invoices/${r.invoiceId}`)
@@ -136,12 +140,24 @@ export function NewInvoicePage() {
           {!sales && <label>Numer faktury dostawcy<input value={number} onChange={e => setNumber(e.target.value)} required maxLength={50} /></label>}
           <label>Data wystawienia<input type="date" value={issueDate} onChange={e => { setIssueDate(e.target.value); setDueDate(addDaysIso(e.target.value, 14)) }} required /></label>
           <label>Termin płatności<input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} required /></label>
-          <label>{sales ? 'Konto przychodu' : 'Konto kosztu'}
+          {fullBooks && <label>{sales ? 'Konto przychodu' : 'Konto kosztu'}
             <select value={resultAccountId} onChange={e => setResultAccountId(e.target.value)}>
               <option value="">domyślne ({sales ? '700' : '402'})</option>
               {resultAccounts.map(a => <option key={a.id} value={a.id}>{a.code} {a.name}</option>)}
             </select>
-          </label>
+          </label>}
+          {mode === 'Kpir' && <label className="grow">Rodzaj wpisu w KPiR
+            <select value={kind} onChange={e => setKind(e.target.value)}>
+              <option value="">domyślny ({kpirKindLabel[sales ? 'Revenue' : 'OtherExpense']})</option>
+              {(sales ? salesKinds : purchaseKinds).map(k => <option key={k} value={k}>{kpirKindLabel[k]}</option>)}
+            </select>
+          </label>}
+          {mode === 'Ryczalt' && sales && <label>Stawka ryczałtu
+            <select value={rate} onChange={e => setRate(e.target.value)} required>
+              <option value="">– wybierz stawkę –</option>
+              {ryczaltRates.map(r => <option key={r} value={r}>{String(r).replace('.', ',')}%</option>)}
+            </select>
+          </label>}
         </div>
         <table className="lines">
           <thead><tr><th>Opis pozycji</th><th className="num">Netto</th><th>VAT</th><th className="num">Kwota VAT</th><th className="num">Brutto</th><th></th></tr></thead>
@@ -177,8 +193,10 @@ export function NewInvoicePage() {
         <div className="form-row">
           <label className="grow">Uwagi<input value={notes} onChange={e => setNotes(e.target.value)} maxLength={500} /></label>
         </div>
-        <p className="muted small">Faktura zostanie zaksięgowana automatycznie ({sales ? 'Wn 201 / Ma przychód + 220 VAT' : 'Wn koszt + 220 VAT / Ma 202'}).</p>
-        <Button variant="primary"  disabled={busy || invalid || !contractorId}>{busy ? 'Zapisywanie…' : sales ? 'Wystaw i zaksięguj' : 'Zarejestruj i zaksięguj'}</Button>
+        <p className="muted small">{fullBooks
+          ? `Faktura zostanie zaksięgowana automatycznie (${sales ? 'Wn 201 / Ma przychód + 220 VAT' : 'Wn koszt + 220 VAT / Ma 202'}).`
+          : `Faktura trafi do ewidencji ${mode === 'Kpir' ? 'KPiR' : 'ryczałtu'} (kwoty netto) – bez księgowania na konta.`}</p>
+        <Button variant="primary"  disabled={busy || invalid || !contractorId || (mode === 'Ryczalt' && sales && !rate)}>{busy ? 'Zapisywanie…' : !fullBooks ? (sales ? 'Wystaw fakturę' : 'Zarejestruj fakturę') : sales ? 'Wystaw i zaksięguj' : 'Zarejestruj i zaksięguj'}</Button>
       </form>
     </>
   )
@@ -187,7 +205,7 @@ export function NewInvoicePage() {
 export function InvoicePage() {
   const { confirm } = useDialogs()
   const { id } = useParams()
-  const { canWrite } = useAuth()
+  const { canWrite, fullBooks } = useAuth()
   const { data, error, loading, reload } = useLoad(() => api.invoice(id!), [id])
   const accounts = useLoad(() => api.accounts(), [])
   const [actionError, setActionError] = useState('')
@@ -218,7 +236,7 @@ export function InvoicePage() {
     const amount = parseAmount(payAmount)
     if (amount === null || amount <= 0) { setActionError('Podaj poprawną kwotę płatności'); return }
     try {
-      await api.addPayment(id!, { date: payDate, amount, accountId: payAccount })
+      await api.addPayment(id!, { date: payDate, amount, accountId: fullBooks ? payAccount : '00000000-0000-0000-0000-000000000000' })
       setNotice(`Zarejestrowano płatność ${fmtMoney(amount)}`)
       setPayAmount('')
       reload()
@@ -252,6 +270,8 @@ export function InvoicePage() {
               <dt>Data wystawienia</dt><dd>{fmtDate(data.issueDate)}</dd>
               <dt>Termin płatności</dt><dd>{fmtDate(data.dueDate)}</dd>
               <dt>Status</dt><dd data-testid="invoice-status"><StatusBadge status={data.status}>{statusLabel[data.status]}</StatusBadge></dd>
+              {data.kpirKind && <><dt>Wpis w KPiR</dt><dd data-testid="invoice-kpir-kind">{kpirKindLabel[data.kpirKind]}</dd></>}
+              {data.ryczaltRate != null && <><dt>Stawka ryczałtu</dt><dd data-testid="invoice-ryczalt-rate">{String(data.ryczaltRate).replace('.', ',')}%</dd></>}
               {data.transactionId && <><dt>Księgowanie</dt><dd><Link to={`/transactions/${data.transactionId}`}>{data.transactionNumber}</Link></dd></>}
               {data.notes && <><dt>Uwagi</dt><dd>{data.notes}</dd></>}
             </dl>
@@ -287,7 +307,7 @@ export function InvoicePage() {
               <tbody>
                 {data.payments.map(p => (
                   <tr key={p.id}><td>{fmtDate(p.date)}</td><td>{p.accountCode} {p.accountName}</td><td className="num">{fmtMoney(p.amount)}</td>
-                    <td><Link to={`/transactions/${p.transactionId}`}>zobacz</Link></td></tr>
+                    <td>{p.transactionId ? <Link to={`/transactions/${p.transactionId}`}>zobacz</Link> : '—'}</td></tr>
                 ))}
               </tbody>
             </table>
@@ -310,12 +330,12 @@ export function InvoicePage() {
             <form className="card form-row" onSubmit={pay} aria-label="Nowa płatność">
               <label>Data<input type="date" value={payDate} onChange={e => setPayDate(e.target.value)} required /></label>
               <label>Kwota<input inputMode="decimal" value={payAmount} onChange={e => setPayAmount(e.target.value)} placeholder={fmtMoney(data.remaining)} required /></label>
-              <label className="grow">{data.type === 'Sales' ? 'Wpłynęło na konto' : 'Zapłacono z konta'}
+              {fullBooks && <label className="grow">{data.type === 'Sales' ? 'Wpłynęło na konto' : 'Zapłacono z konta'}
                 <select value={payAccount} onChange={e => setPayAccount(e.target.value)} required>
                   <option value="">– wybierz kasę/bank –</option>
                   {cash.map(a => <option key={a.id} value={a.id}>{a.code} {a.name}</option>)}
                 </select>
-              </label>
+              </label>}
               <Button small type="button"  onClick={() => setPayAmount(String(data.remaining).replace('.', ','))}>Cała kwota</Button>
               <Button variant="primary">Zarejestruj płatność</Button>
             </form>

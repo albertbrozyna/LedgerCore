@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom'
 import { api } from '../api'
+import { useAuth } from '../auth'
 import { fmtDate, fmtMoney } from '../format'
 import { upcomingDeadlines } from '../taxCalendar'
 import { ErrorBox, Loading, PageHeader, useLoad } from '../design'
 
 export function DashboardPage() {
+  const { fullBooks, mode } = useAuth()
   const { data, error, loading } = useLoad(() => api.dashboard(), [])
   const month = new Date().toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' })
 
@@ -15,12 +17,13 @@ export function DashboardPage() {
       {loading && !data && <Loading />}
       {data && (
         <>
-          <div className="tiles">
+          {!fullBooks && <p className="card">Ta firma prowadzi {mode === 'Kpir' ? 'podatkową księgę przychodów i rozchodów' : 'ewidencję przychodów ryczałtu'} – zapisy powstają z faktur. <Link to="/register">Otwórz ewidencję</Link>.</p>}
+          {fullBooks && <div className="tiles">
             <Tile label="Aktywa" value={data.assets} id="tile-assets" />
             <Tile label="Zobowiązania" value={data.liabilities} id="tile-liabilities" />
             <Tile label="Kapitał własny" value={data.equity} id="tile-equity" />
-          </div>
-          <h2>Bieżący miesiąc ({month})</h2>
+          </div>}
+          {fullBooks && <><h2>Bieżący miesiąc ({month})</h2>
           <div className="tiles">
             <Tile label="Przychody" value={data.monthIncome} id="tile-income" />
             <Tile label="Koszty" value={data.monthExpenses} id="tile-expenses" />
@@ -28,7 +31,7 @@ export function DashboardPage() {
           </div>
           <h2>Przychody i koszty – ostatnie 12 miesięcy</h2>
           <MonthChart months={data.months} />
-          <p className="small"><span className="legend ok-dot" /> przychody <span className="legend bad-dot" /> koszty</p>
+          <p className="small"><span className="legend ok-dot" /> przychody <span className="legend bad-dot" /> koszty</p></>}
           <h2>Najbliższe terminy podatkowe</h2>
           <ul className="deadlines" data-testid="tax-calendar">
             {upcomingDeadlines(new Date()).map(d => (
@@ -43,7 +46,7 @@ export function DashboardPage() {
             <Tile label="Zobowiązania" value={data.payables} id="tile-payables" />
             <Tile label="w tym po terminie" value={data.payablesOverdue} id="tile-payables-overdue" tone={data.payablesOverdue > 0 ? "neg" : undefined} />
           </div>
-          <h2>Ostatnie księgowania</h2>
+          {fullBooks && <><h2>Ostatnie księgowania</h2>
           {data.recent.length === 0 ? (
             <p className="muted">Brak księgowań. <Link to="/transactions/new">Dodaj pierwsze</Link>.</p>
           ) : (
@@ -58,7 +61,7 @@ export function DashboardPage() {
                 ))}
               </tbody>
             </table>
-          )}
+          )}</>}
         </>
       )}
     </>

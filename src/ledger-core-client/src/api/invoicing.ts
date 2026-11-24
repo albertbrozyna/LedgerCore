@@ -1,5 +1,5 @@
 import { download, json, qs, upload } from './http'
-import type { AttachmentDto, ContractorDto, InvoiceDetail, InvoiceLineInput, InvoiceList, InvoiceType } from './types'
+import type { AttachmentDto, ContractorDto, InvoiceDetail, InvoiceLineInput, InvoiceList, InvoiceType, KpirKind } from './types'
 
 /** Kontrahenci, faktury (z płatnościami, korektami i załącznikami). */
 export const invoicingApi = {
@@ -14,6 +14,7 @@ export const invoicingApi = {
   createInvoice: (b: {
     type: InvoiceType; number?: string; contractorId: string; issueDate: string; saleDate?: string; dueDate: string
     resultAccountId?: string; notes?: string; lines: InvoiceLineInput[]
+    kind?: KpirKind; ryczaltRate?: number
   }) => json<{ invoiceId: string; number: string; transactionId: string }>('POST', '/invoices', b),
   addPayment: (id: string, b: { date: string; amount: number; accountId: string }) => json<void>('POST', `/invoices/${id}/payments`, b),
   cancelInvoice: (id: string) => json<void>('POST', `/invoices/${id}/cancel`),

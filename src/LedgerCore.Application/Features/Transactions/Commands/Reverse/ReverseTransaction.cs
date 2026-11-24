@@ -15,6 +15,7 @@ public static class ReverseTransaction
     {
         public async Task<CreateTransaction.Result> Handle(Command request, CancellationToken ct)
         {
+            await LedgerCore.Application.Common.Ledger.CompanyMode.RequireFullBooks(db, ct);
             var original = await db.Transactions.Include(t => t.Entries)
                                .FirstOrDefaultAsync(t => t.Id == request.TransactionId, ct)
                            ?? throw new DomainValidationException("Nie znaleziono księgowania");

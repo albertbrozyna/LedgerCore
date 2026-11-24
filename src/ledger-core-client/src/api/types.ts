@@ -3,6 +3,8 @@
 export type Role = 'Admin' | 'Accountant' | 'Viewer'
 export type AccountType = 'Asset' | 'Liability' | 'Equity' | 'Income' | 'Expense'
 export type Side = 'Debit' | 'Credit'
+export type AccountingMode = 'FullBooks' | 'Kpir' | 'Ryczalt'
+export type KpirKind = 'Revenue' | 'OtherRevenue' | 'GoodsPurchase' | 'PurchaseCosts' | 'OtherExpense' | 'Research'
 export type InvoiceType = 'Sales' | 'Purchase'
 export type VatRate = 'R23' | 'R8' | 'R5' | 'R0' | 'Exempt'
 export type InvoiceStatus = 'unpaid' | 'overdue' | 'paid' | 'canceled' | 'correction'
@@ -90,18 +92,19 @@ export interface InvoiceDetail {
   paidAmount: number; remaining: number; status: InvoiceStatus; notes?: string | null
   transactionId?: string | null; transactionNumber?: string | null
   lines: { description: string; net: number; vatRate: VatRate; vat: number; gross: number }[]
-  payments: { id: string; date: string; amount: number; accountCode: string; accountName: string; transactionId: string }[]
+  payments: { id: string; date: string; amount: number; accountCode: string; accountName: string; transactionId: string | null }[]
   isCorrection: boolean; correctedInvoiceId?: string | null; correctedNumber?: string | null
   correctedAmount: number; grossAfterCorrections: number
   corrections: { id: string; number: string; issueDate: string; gross: number; isCanceled: boolean }[]
+  kpirKind?: KpirKind | null; ryczaltRate?: number | null
 }
 export interface InvoiceLineInput { description: string; net: number; vatRate: VatRate }
 export interface AttachmentDto { id: string; fileName: string; contentType: string; size: number; uploadedAt: string }
 
 // ---- Firmy i administracja ----
-export interface CompanyDto { name: string; nip?: string | null; address?: string | null; email?: string | null; phone?: string | null; bankAccount?: string | null; invoiceFooter?: string | null }
-export interface CompanyListItem { id: string; name: string; nip?: string | null }
-export interface CompanyAdminItem { id: string; name: string; nip?: string | null; address?: string | null; isActive: boolean; createdAt: string }
+export interface CompanyDto { accountingMode?: AccountingMode; name: string; nip?: string | null; address?: string | null; email?: string | null; phone?: string | null; bankAccount?: string | null; invoiceFooter?: string | null }
+export interface CompanyListItem { id: string; name: string; nip?: string | null; accountingMode: AccountingMode }
+export interface CompanyAdminItem { id: string; name: string; nip?: string | null; address?: string | null; isActive: boolean; createdAt: string; accountingMode: AccountingMode }
 export interface BackupItem { name: string; size: number; created: string; manual: boolean }
 export interface AuditItem { id: string; at: string; userName: string; action: string; details: string }
 export interface AuditList { items: AuditItem[]; totalCount: number; page: number; pageSize: number }
@@ -112,4 +115,24 @@ export interface SearchResult {
   contractors: { id: string; name: string; nip?: string | null }[]
   invoices: { id: string; number: string; contractorName: string; gross: number; isCanceled: boolean }[]
   transactions: { id: string; number: string; description: string; date: string }[]
+}
+
+// ---- Ewidencje KPiR i ryczałtu ----
+export interface KpirTotals {
+  revenue: number; otherRevenue: number; totalRevenue: number; goodsPurchase: number; purchaseCosts: number
+  wages: number; otherExpense: number; totalExpense: number; research: number
+}
+export interface KpirRow extends KpirTotals {
+  lp: number; invoiceId: string; date: string; document: string; contractor: string; address?: string | null
+  description: string; remarks?: string | null
+}
+export interface KpirDto {
+  rows: KpirRow[]; period: KpirTotals; yearToDate: KpirTotals; income: number; advanceInfo: number
+  months: { month: string; period: KpirTotals; yearToDate: KpirTotals; income: number; advanceInfo: number }[]
+}
+export interface RyczaltRateTotal { rate: number; revenue: number; tax: number }
+export interface RyczaltDto {
+  rows: { lp: number; invoiceId: string; date: string; document: string; contractor: string; description: string; rate: number; revenue: number }[]
+  totalRevenue: number; byRate: RyczaltRateTotal[]; yearToDateByRate: RyczaltRateTotal[]; yearToDateTax: number
+  months: { month: string; revenue: number; yearToDateRevenue: number; yearToDateTax: number }[]
 }

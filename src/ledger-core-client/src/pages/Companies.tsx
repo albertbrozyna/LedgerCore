@@ -1,14 +1,14 @@
 import { useState, type FormEvent } from 'react'
-import { api } from '../api'
+import { api, type AccountingMode } from '../api'
 import { useAuth } from '../auth'
-import { fmtDate } from '../format'
+import { accountingModeLabel, fmtDate } from '../format'
 import { Badge, Button, ErrorBox, Loading, Notice, PageHeader, useDialogs, useLoad } from '../design'
 
 export function CompaniesPage() {
   const { prompt } = useDialogs()
   const { company, switchCompany } = useAuth()
   const { data, error, loading, reload } = useLoad(() => api.allCompanies(), [])
-  const [f, setF] = useState({ name: '', nip: '', address: '', seed: true })
+  const [f, setF] = useState({ name: '', nip: '', address: '', seed: true, mode: 'FullBooks' as AccountingMode })
   const [formError, setFormError] = useState('')
   const [notice, setNotice] = useState('')
 
@@ -16,9 +16,9 @@ export function CompaniesPage() {
     e.preventDefault()
     setFormError(''); setNotice('')
     try {
-      await api.createCompany({ name: f.name, nip: f.nip, address: f.address, seedChartOfAccounts: f.seed })
+      await api.createCompany({ name: f.name, nip: f.nip, address: f.address, seedChartOfAccounts: f.seed, mode: f.mode })
       setNotice(`Dodano firmę ${f.name}`)
-      setF({ name: '', nip: '', address: '', seed: true })
+      setF({ name: '', nip: '', address: '', seed: true, mode: 'FullBooks' })
       reload()
     } catch (err) { setFormError((err as Error).message) }
   }
@@ -40,19 +40,24 @@ export function CompaniesPage() {
         <label className="grow">Nazwa firmy<input value={f.name} onChange={e => setF({ ...f, name: e.target.value })} required maxLength={200} /></label>
         <label>NIP<input value={f.nip} onChange={e => setF({ ...f, nip: e.target.value })} placeholder="opcjonalnie" /></label>
         <label className="grow">Adres<input value={f.address} onChange={e => setF({ ...f, address: e.target.value })} /></label>
-        <label className="inline"><input type="checkbox" checked={f.seed} onChange={e => setF({ ...f, seed: e.target.checked })} /> Domyślny plan kont</label>
+        <label>Tryb ewidencji
+          <select value={f.mode} onChange={e => setF({ ...f, mode: e.target.value as AccountingMode })}>
+            {(['FullBooks', 'Kpir', 'Ryczalt'] as AccountingMode[]).map(m => <option key={m} value={m}>{accountingModeLabel[m]}</option>)}
+          </select>
+        </label>
+        {f.mode === 'FullBooks' && <label className="inline"><input type="checkbox" checked={f.seed} onChange={e => setF({ ...f, seed: e.target.checked })} /> Domyślny plan kont</label>}
         <Button variant="primary">Dodaj firmę</Button>
       </form>
 
       {loading && !data && <Loading />}
       {data && (
         <table aria-label="Lista firm">
-          <thead><tr><th>Nazwa</th><th>NIP</th><th>Adres</th><th>Dodana</th><th>Status</th><th></th></tr></thead>
+          <thead><tr><th>Nazwa</th><th>NIP</th><th>Adres</th><th>Tryb</th><th>Dodana</th><th>Status</th><th></th></tr></thead>
           <tbody>
             {data.map(c => (
               <tr key={c.id} className={c.isActive ? '' : 'inactive'}>
                 <td>{c.name}{c.id === company?.id && <Badge> bieżąca</Badge>}</td>
-                <td>{c.nip ?? ''}</td><td>{c.address ?? ''}</td><td>{fmtDate(c.createdAt)}</td>
+                <td>{c.nip ?? ''}</td><td>{c.address ?? ''}</td><td>{accountingModeLabel[c.accountingMode]}</td><td>{fmtDate(c.createdAt)}</td>
                 <td>{c.isActive ? 'Aktywna' : 'Nieaktywna'}</td>
                 <td className="actions">
                   {c.isActive && c.id !== company?.id && <Button variant="link" small  onClick={() => switchCompany(c.id)}>Przełącz</Button>}

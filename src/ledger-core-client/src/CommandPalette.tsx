@@ -30,7 +30,7 @@ export function ShortcutHelp({ onClose }: { onClose: () => void }) {
  */
 export function CommandPalette({ onClose, onHelp }: { onClose: () => void; onHelp: () => void }) {
   const nav = useNavigate()
-  const { canWrite, isAdmin, companies, company, switchCompany } = useAuth()
+  const { canWrite, isAdmin, companies, company, switchCompany, fullBooks, mode } = useAuth()
   const [q, setQ] = useState('')
   const [result, setResult] = useState<{ q: string; data: SearchResult } | null>(null)
   const [error, setError] = useState('')
@@ -42,24 +42,27 @@ export function CommandPalette({ onClose, onHelp }: { onClose: () => void; onHel
     const c: Item[] = []
     const add = (label: string, run: () => void, hint?: string) => c.push({ id: `cmd-${c.length}`, group: 'Polecenia', label, run, hint })
     add('Pulpit', go('/dashboard'))
-    if (canWrite) {
+    if (canWrite && fullBooks) {
       add('Nowe księgowanie', go('/transactions/new'), 'N')
+    }
+    if (canWrite) {
       add('Nowa faktura sprzedaży', go('/invoices/new?type=Sales'), 'F')
       add('Rejestruj fakturę zakupu', go('/invoices/new?type=Purchase'))
     }
-    add('Dziennik księgowań', go('/transactions'))
+    if (fullBooks) add('Dziennik księgowań', go('/transactions'))
+    else add(mode === 'Kpir' ? 'Ewidencja KPiR' : 'Ewidencja ryczałtu', go('/register'))
     add('Faktury', go('/invoices'))
     add('Kontrahenci', go('/contractors'))
-    add('Plan kont', go('/accounts'))
+    if (fullBooks) add('Plan kont', go('/accounts'))
     add('Raporty', go('/reports'))
-    add('Import wyciągu bankowego', go('/bank-import'))
+    if (fullBooks) add('Import wyciągu bankowego', go('/bank-import'))
     add('Moje konto', go('/my-account'))
     if (isAdmin) { add('Firmy', go('/companies')); add('Użytkownicy', go('/users')); add('Administracja', go('/admin')) }
     for (const x of companies) if (x.id !== company?.id) add(`Przełącz firmę: ${x.name}`, () => { onClose(); switchCompany(x.id) })
     add('Pokaż skróty klawiaturowe', () => { onClose(); onHelp() }, '?')
     return c
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canWrite, isAdmin, companies, company?.id])
+  }, [canWrite, isAdmin, companies, company?.id, fullBooks, mode])
 
   useEffect(() => {
     const text = q.trim()

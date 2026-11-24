@@ -76,6 +76,16 @@ public static class CreateCorrection
 
             original.ApplyCorrection(correction.Gross); // pilnuje, by nie zejść poniżej zapłaconej kwoty
 
+            if (await CompanyMode.Get(db, ct) != AccountingMode.FullBooks)
+            {
+                // KPiR / ryczałt: korekta trafia do ewidencji ze znakiem (w dacie wystawienia korekty), bez księgowania na konta
+                correction.SetTaxClassification(original.KpirKind, original.RyczaltRate);
+                db.Invoices.Add(correction);
+                await audit.Add("Korekta", $"Wystawiono korektę {correction.Number} do faktury {original.Number}, różnica brutto {correction.Gross:0.00}", ct);
+                await db.SaveChangesAsync(ct);
+                return new CreateInvoice.Result(correction.Id, correction.Number, Guid.Empty);
+            }
+
             var control = await SystemAccounts.ByCode(db, sales ? SystemAccounts.Receivables : SystemAccounts.Payables, ct);
             var vatAcc = correction.Vat != 0 ? await SystemAccounts.ByCode(db, SystemAccounts.Vat, ct) : null;
             var tx = new Transaction($"Korekta {(sales ? "faktury sprzedaży" : "faktury zakupu")} {original.Number} ({correction.Number}) – {original.Contractor!.Name}",

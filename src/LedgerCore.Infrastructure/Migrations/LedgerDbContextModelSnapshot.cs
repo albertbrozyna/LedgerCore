@@ -136,6 +136,9 @@ namespace LedgerCore.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("AccountingMode")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Address")
                         .HasMaxLength(300)
                         .HasColumnType("TEXT");
@@ -255,6 +258,9 @@ namespace LedgerCore.Infrastructure.Migrations
                     b.Property<DateTime>("IssueDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("KpirKind")
+                        .HasColumnType("INTEGER");
+
                     b.Property<decimal>("Net")
                         .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
@@ -273,6 +279,10 @@ namespace LedgerCore.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("ResultAccountId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("RyczaltRate")
+                        .HasPrecision(5, 2)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("SaleDate")

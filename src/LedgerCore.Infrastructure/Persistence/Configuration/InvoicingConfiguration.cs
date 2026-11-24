@@ -26,6 +26,7 @@ namespace LedgerCore.Infrastructure.Persistence.Configuration
             b.Property(i => i.Gross).HasPrecision(18, 2);
             b.Property(i => i.PaidAmount).HasPrecision(18, 2);
             b.Property(i => i.Notes).HasMaxLength(500);
+            b.Property(i => i.RyczaltRate).HasPrecision(5, 2);
             b.Ignore(i => i.Remaining);
             b.Ignore(i => i.IsCorrection);
             b.Property(i => i.CorrectedAmount).HasPrecision(18, 2);

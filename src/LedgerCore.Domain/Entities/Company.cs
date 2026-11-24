@@ -1,3 +1,5 @@
+using LedgerCore.Domain.Enums;
+
 namespace LedgerCore.Domain.Entities;
 
 /// <summary>Znacznik rekordów należących do konkretnej firmy (klienta biura). Dane różnych firm są od siebie odizolowane.</summary>
@@ -22,6 +24,8 @@ public class Company
     public string? InvoiceFooter { get; private set; }
     public bool IsActive { get; private set; } = true;
     public DateTime CreatedAt { get; private set; }
+    /// <summary>Sposób prowadzenia ewidencji (domyślnie pełna księgowość – tak migrowane są istniejące firmy).</summary>
+    public AccountingMode AccountingMode { get; private set; } = AccountingMode.FullBooks;
 
     private Company() { }
 
@@ -42,6 +46,8 @@ public class Company
     }
 
     public void SetActive(bool active) => IsActive = active;
+
+    public void SetAccountingMode(AccountingMode mode) => AccountingMode = mode;
 }
 
 /// <summary>Dostęp użytkownika do firmy. Administrator ma dostęp do wszystkich firm bez przypisań.</summary>

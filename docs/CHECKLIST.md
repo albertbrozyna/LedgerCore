@@ -61,3 +61,4 @@ Legenda: ✅ zrobione · ⬜ później · ⛔ zablokowane zewnętrznie
 - ✅ Tabele: sortowanie po stronie serwera, filtry, wybór kolumn, zapisane widoki, eksport widoku CSV, audyt dostępności (axe)
 - ✅ Globalna wyszukiwarka i paleta poleceń (Ctrl+K), skróty klawiaturowe z pomocą (N, F, ?, Alt+↑/↓)
 - ✅ Szybkie księgowanie z klawiatury: autouzupełnianie kont, Ctrl+Enter, podgląd sald, „Kopiuj jako nowe”
+- ✅ KPiR i ryczałt: tryb ewidencji firmy, księga przychodów i rozchodów (kolumny 7–17), ewidencja przychodów ryczałtu, eksport CSV i druk

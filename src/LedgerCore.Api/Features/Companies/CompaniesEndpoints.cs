@@ -5,7 +5,7 @@ using MediatR;
 
 namespace LedgerCore.Api.Features.Companies
 {
-    public record CompanyCreateBody(string Name, string? Nip, string? Address, bool? SeedChartOfAccounts);
+    public record CompanyCreateBody(string Name, string? Nip, string? Address, bool? SeedChartOfAccounts, LedgerCore.Domain.Enums.AccountingMode? Mode);
     public record CompanyStatusBody(string Name, bool IsActive);
     public record UserCompaniesBody(List<Guid> CompanyIds);
 
@@ -19,7 +19,7 @@ namespace LedgerCore.Api.Features.Companies
             companies.MapGet("", async (ISender s, CancellationToken ct) => Results.Ok(await s.Send(new ListAllCompanies.Query(), ct)))
                 .RequireAuthorization(Policies.AdminOnly);
             companies.MapPost("", async (CompanyCreateBody b, ISender s, CancellationToken ct) =>
-                Results.Ok(new { id = await s.Send(new CreateCompany.Command(b.Name, b.Nip, b.Address, b.SeedChartOfAccounts ?? true), ct) }))
+                Results.Ok(new { id = await s.Send(new CreateCompany.Command(b.Name, b.Nip, b.Address, b.SeedChartOfAccounts ?? true, b.Mode ?? LedgerCore.Domain.Enums.AccountingMode.FullBooks), ct) }))
                 .RequireAuthorization(Policies.AdminOnly);
             companies.MapPut("{id:guid}", async (Guid id, CompanyStatusBody b, ISender s, CancellationToken ct) =>
             {

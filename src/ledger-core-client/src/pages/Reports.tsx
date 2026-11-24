@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { api, type InvoiceType } from '../api'
+import { useAuth } from '../auth'
 import { downloadCsv } from '../print'
 import { accountTypeLabel, fmtDate, fmtMoney, fmtMoneyOrDash, invoiceTypeLabel, monthStartIso, todayIso, vatRateLabel, yearStartIso } from '../format'
 import { Button, ErrorBox, Loading, PageHeader, PrintHeader, Tabs, useLoad } from '../design'
@@ -65,7 +66,8 @@ export function LedgerPage() {
 const tabTitle = { tb: 'Zestawienie obrotów i sald', pnl: 'Rachunek wyników', bs: 'Bilans', vat: 'Rejestry VAT', settle: 'Rozrachunki' } as const
 
 export function ReportsPage() {
-  const [tab, setTab] = useState<'tb' | 'pnl' | 'bs' | 'vat' | 'settle'>('tb')
+  const { fullBooks } = useAuth()
+  const [tab, setTab] = useState<'tb' | 'pnl' | 'bs' | 'vat' | 'settle'>(fullBooks ? 'tb' : 'vat')
   const [from, setFrom] = useState(yearStartIso())
   const [to, setTo] = useState(todayIso())
 
@@ -74,7 +76,7 @@ export function ReportsPage() {
       <PageHeader title="Raporty"><Button  onClick={() => window.print()}>Drukuj / PDF</Button></PageHeader>
       <PrintHeader title={tabTitle[tab]} period={tab === 'bs' ? `na dzień ${to}` : tab === 'settle' ? undefined : `${from} – ${to}`} />
       <div className="no-print"><Tabs label="Rodzaj raportu" value={tab} onChange={setTab} tabs={[
-        { value: 'tb', label: 'Zestawienie obrotów i sald' }, { value: 'pnl', label: 'Rachunek wyników' }, { value: 'bs', label: 'Bilans' },
+        ...(fullBooks ? [{ value: 'tb' as const, label: 'Zestawienie obrotów i sald' }, { value: 'pnl' as const, label: 'Rachunek wyników' }, { value: 'bs' as const, label: 'Bilans' }] : []),
         { value: 'vat', label: 'Rejestry VAT' }, { value: 'settle', label: 'Rozrachunki' }]} /></div>
       <div className="card form-row">
         <label>Od<input type="date" value={from} onChange={e => setFrom(e.target.value)} /></label>

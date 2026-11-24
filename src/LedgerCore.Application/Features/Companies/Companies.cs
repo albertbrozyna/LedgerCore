@@ -3,6 +3,7 @@ using LedgerCore.Application.Common.Interfaces;
 using LedgerCore.Application.Common.Ledger;
 using LedgerCore.Application.Features.Setup;
 using LedgerCore.Domain.Entities;
+using LedgerCore.Domain.Enums;
 using LedgerCore.Domain.Exceptions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -30,31 +31,31 @@ public static class CompanyAccess
 public static class ListMyCompanies
 {
     public record Query : IRequest<List<Item>>;
-    public record Item(Guid Id, string Name, string? Nip);
+    public record Item(Guid Id, string Name, string? Nip, AccountingMode AccountingMode = AccountingMode.FullBooks);
 
     public class Handler(IAppDbContext db, IIdentityService identity, IUserDetails me) : IRequestHandler<Query, List<Item>>
     {
         public async Task<List<Item>> Handle(Query r, CancellationToken ct) =>
-            me.User is null ? [] : (await CompanyAccess.Accessible(db, identity, me.User.Id, ct)).Select(c => new Item(c.Id, c.Name, c.Nip)).ToList();
+            me.User is null ? [] : (await CompanyAccess.Accessible(db, identity, me.User.Id, ct)).Select(c => new Item(c.Id, c.Name, c.Nip, c.AccountingMode)).ToList();
     }
 }
 
 public static class ListAllCompanies
 {
     public record Query : IRequest<List<Item>>;
-    public record Item(Guid Id, string Name, string? Nip, string? Address, bool IsActive, DateTime CreatedAt);
+    public record Item(Guid Id, string Name, string? Nip, string? Address, bool IsActive, DateTime CreatedAt, AccountingMode AccountingMode = AccountingMode.FullBooks);
 
     public class Handler(IAppDbContext db) : IRequestHandler<Query, List<Item>>
     {
         public async Task<List<Item>> Handle(Query r, CancellationToken ct) =>
             (await db.Companies.AsNoTracking().OrderBy(c => c.Name).ToListAsync(ct))
-            .Select(c => new Item(c.Id, c.Name, c.Nip, c.Address, c.IsActive, c.CreatedAt)).ToList();
+            .Select(c => new Item(c.Id, c.Name, c.Nip, c.Address, c.IsActive, c.CreatedAt, c.AccountingMode)).ToList();
     }
 }
 
 public static class CreateCompany
 {
-    public record Command(string Name, string? Nip, string? Address, bool SeedChartOfAccounts = true) : IRequest<Guid>;
+    public record Command(string Name, string? Nip, string? Address, bool SeedChartOfAccounts = true, AccountingMode Mode = AccountingMode.FullBooks) : IRequest<Guid>;
 
     public class Validator : AbstractValidator<Command>
     {
@@ -77,11 +78,13 @@ public static class CreateCompany
 
             var c = new Company(r.Name);
             c.Update(r.Name, r.Nip, r.Address, null, null, null, null);
+            if (!Enum.IsDefined(r.Mode)) throw new DomainValidationException("Nieprawidłowy tryb ewidencji");
+            c.SetAccountingMode(r.Mode);
             db.Companies.Add(c);
 
             // Nowe rekordy trafią do nowej firmy; wpis audytu zostaje w firmie, z której administrator ją utworzył.
-            await audit.Add("Firma", $"Dodano firmę {c.Name}", ct);
-            if (r.SeedChartOfAccounts)
+            await audit.Add("Firma", $"Dodano firmę {c.Name} (tryb: {r.Mode})", ct);
+            if (r.SeedChartOfAccounts && r.Mode == AccountingMode.FullBooks) // KPiR i ryczałt nie używają planu kont
             {
                 var previous = ctx.CompanyId;
                 await db.SaveChangesAsync(ct); // zapisuje audyt we właściwej firmie
