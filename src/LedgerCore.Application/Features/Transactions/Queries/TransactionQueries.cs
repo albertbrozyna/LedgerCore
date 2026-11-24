@@ -1,4 +1,5 @@
 using LedgerCore.Application.Common.Interfaces;
+using LedgerCore.Domain.Entities;
 using LedgerCore.Domain.Enums;
 using LedgerCore.Domain.Exceptions;
 using MediatR;
@@ -8,8 +9,11 @@ namespace LedgerCore.Application.Features.Transactions.Queries;
 
 public static class ListTransactions
 {
-    public record Query(DateTime? From, DateTime? To, Guid? AccountId, string? Search, int Page = 1, int PageSize = 25)
-        : IRequest<Response>;
+    /// <summary>Sort: date (domyślnie), number, description, amount; Dir: asc/desc. Nazwy kolumn z żądania nigdy nie trafiają do SQL – tylko wybór z listy.</summary>
+    public record Query(DateTime? From, DateTime? To, Guid? AccountId, string? Search, int Page = 1, int PageSize = 25,
+        string? Sort = null, string? Dir = null) : IRequest<Response>;
+
+    public static readonly string[] SortKeys = ["date", "number", "description", "amount"];
 
     public record Item(Guid Id, string Number, DateTime Date, string Description, decimal Amount, int EntryCount,
         bool IsReversal, bool IsReversed);
@@ -34,7 +38,19 @@ public static class ListTransactions
             }
 
             var total = await q.CountAsync(ct);
-            var pageRows = await q.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAt)
+            var desc = !string.Equals(r.Dir, "asc", StringComparison.OrdinalIgnoreCase);
+            if (r.Sort is not null && !SortKeys.Contains(r.Sort.ToLowerInvariant()))
+                throw new DomainValidationException($"Nieprawidłowe sortowanie: {r.Sort}");
+            IOrderedQueryable<Transaction> ordered = (r.Sort?.ToLowerInvariant()) switch
+            {
+                "number" => desc ? q.OrderByDescending(t => t.Number) : q.OrderBy(t => t.Number),
+                "description" => desc ? q.OrderByDescending(t => t.Description) : q.OrderBy(t => t.Description),
+                "amount" => desc
+                    ? q.OrderByDescending(t => t.Entries.Where(e => e.Side == DebitCredit.Debit).Sum(e => e.AmountCents))
+                    : q.OrderBy(t => t.Entries.Where(e => e.Side == DebitCredit.Debit).Sum(e => e.AmountCents)),
+                _ => desc ? q.OrderByDescending(t => t.Date) : q.OrderBy(t => t.Date),
+            };
+            var pageRows = await ordered.ThenByDescending(t => t.CreatedAt).ThenBy(t => t.Id)
                 .Skip((page - 1) * size).Take(size)
                 .Select(t => new
                 {

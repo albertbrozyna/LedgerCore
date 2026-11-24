@@ -103,4 +103,5 @@ export interface CompanyDto { name: string; nip?: string | null; address?: strin
 export interface CompanyListItem { id: string; name: string; nip?: string | null }
 export interface CompanyAdminItem { id: string; name: string; nip?: string | null; address?: string | null; isActive: boolean; createdAt: string }
 export interface BackupItem { name: string; size: number; created: string; manual: boolean }
-export interface AuditList { items: { id: string; at: string; userName: string; action: string; details: string }[]; totalCount: number; page: number; pageSize: number }
+export interface AuditItem { id: string; at: string; userName: string; action: string; details: string }
+export interface AuditList { items: AuditItem[]; totalCount: number; page: number; pageSize: number }

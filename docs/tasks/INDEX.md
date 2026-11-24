@@ -9,7 +9,7 @@ Wybieraj zadania od góry (priorytet), pod warunkiem że wszystkie zależności 
 | [T-002](T-002-refaktor-klienta-api.md) | Jeden spójny klient API i typy w UI | E8 Jakość | P0 | M | — | Zrobione |
 | [T-003](T-003-design-system.md) | Design system: tokeny, ciemny motyw, komponenty bazowe | E7 UI/UX | P0 | L | T-002 | Zrobione |
 | [T-017](T-017-wydajnosc-agregacji.md) | Wydajność: agregacje w SQL i skalowanie raportów | E8 Jakość | P0 | L | T-001 | Zrobione |
-| [T-004](T-004-tabele-i-dostepnosc.md) | Zaawansowane tabele i audyt dostępności | E7 UI/UX | P1 | L | T-003 | Do zrobienia |
+| [T-004](T-004-tabele-i-dostepnosc.md) | Zaawansowane tabele i audyt dostępności | E7 UI/UX | P1 | L | T-003 | Zrobione |
 | [T-005](T-005-wyszukiwarka-i-skroty.md) | Globalna wyszukiwarka, paleta poleceń i skróty klawiaturowe | E7 UI/UX | P1 | M | T-003 | Do zrobienia |
 | [T-006](T-006-szybkie-ksiegowanie.md) | Szybkie księgowanie sterowane klawiaturą | E7 UI/UX | P1 | M | T-003 | Do zrobienia |
 | [T-007](T-007-kpir-i-ryczalt.md) | Księga przychodów i rozchodów (KPiR) oraz ewidencja ryczałtu | E1 Rozliczenia PL | P1 | L | T-001 | Do zrobienia |

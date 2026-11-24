@@ -1,27 +1,40 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { api, type AttachmentDto, type InvoiceType, type VatRate } from '../api'
+import { api, type InvoiceItem, type AttachmentDto, type InvoiceType, type VatRate } from '../api'
 import { useAuth } from '../auth'
 import {
   addDaysIso, fmtDate, fmtMoney, invoiceTypeLabel, parseAmount, round2, statusLabel, todayIso, vatPercent, vatRateLabel, yearStartIso,
 } from '../format'
-import { Button, ErrorBox, Loading, Notice, PageHeader, StatusBadge, useDialogs, useLoad } from '../design'
+import { Button, DataTable, ErrorBox, Loading, Notice, PageHeader, SavedViews, StatusBadge, type Column, type SortState, useDialogs, useLoad } from '../design'
 
 const rates = Object.keys(vatRateLabel) as VatRate[]
 
 export function InvoicesPage() {
-  const { canWrite } = useAuth()
+  const { canWrite, user } = useAuth()
   const [params] = useSearchParams()
   const [type, setType] = useState<InvoiceType | ''>('')
   const [status, setStatus] = useState('')
   const [search, setSearch] = useState('')
   const [from, setFrom] = useState(yearStartIso())
   const [page, setPage] = useState(1)
+  const [sort, setSort] = useState<SortState | null>(null)
   const contractorId = params.get('contractorId') ?? undefined
   const { data, error, loading } = useLoad(
-    () => api.invoices({ type: type || undefined, status, search, from, contractorId, page, pageSize: 20 }),
-    [type, status, search, from, contractorId, page])
-  const pages = data ? Math.max(1, Math.ceil(data.totalCount / data.pageSize)) : 1
+    () => api.invoices({ type: type || undefined, status, search, from, contractorId, page, pageSize: 20, sort: sort?.key, dir: sort?.dir }),
+    [type, status, search, from, contractorId, page, sort])
+
+  const columns: Column<InvoiceItem>[] = [
+    { key: 'number', header: 'Numer', sortable: true, csv: i => i.number,
+      render: i => <><Link to={`/invoices/${i.id}`}>{i.number}</Link>{i.correctedNumber && <div className="muted small">korekta do {i.correctedNumber}</div>}</> },
+    { key: 'type', header: 'Rodzaj', sortable: true, render: i => invoiceTypeLabel[i.type], csv: i => invoiceTypeLabel[i.type] },
+    { key: 'contractor', header: 'Kontrahent', sortable: true, render: i => i.contractorName, csv: i => i.contractorName },
+    { key: 'issue', header: 'Wystawiona', sortable: true, render: i => fmtDate(i.issueDate), csv: i => i.issueDate.slice(0, 10) },
+    { key: 'due', header: 'Termin', sortable: true, render: i => fmtDate(i.dueDate), csv: i => i.dueDate.slice(0, 10) },
+    { key: 'gross', header: 'Brutto', sortable: true, align: 'right', render: i => fmtMoney(i.gross), csv: i => i.gross },
+    { key: 'remaining', header: 'Do zapłaty', sortable: true, align: 'right', csv: i => (i.status === 'canceled' || i.isCorrection ? '' : i.remaining),
+      render: i => (i.status === 'canceled' || i.isCorrection ? '' : fmtMoney(i.remaining)) },
+    { key: 'status', header: 'Status', sortable: true, render: i => <StatusBadge status={i.status}>{statusLabel[i.status]}</StatusBadge>, csv: i => statusLabel[i.status] },
+  ]
 
   return (
     <>
@@ -32,6 +45,8 @@ export function InvoicesPage() {
         </>}
       </PageHeader>
       <ErrorBox message={error} />
+      <SavedViews storageKey={`invoices.${user?.id}`} state={{ type, status, search, from }}
+        onApply={v => { setType(v.type); setStatus(v.status); setSearch(v.search); setFrom(v.from); setPage(1) }} />
       <div className="card form-row">
         <label>Rodzaj
           <select value={type} onChange={e => { setType(e.target.value as InvoiceType | ''); setPage(1) }}>
@@ -48,32 +63,13 @@ export function InvoicesPage() {
         <label className="grow">Szukaj<input placeholder="numer lub kontrahent" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} /></label>
       </div>
       {loading && !data && <Loading />}
-      {data && (data.items.length === 0 ? <p className="muted">Brak faktur dla wybranych kryteriów.</p> : (
-        <>
-          <table>
-            <thead><tr><th>Numer</th><th>Rodzaj</th><th>Kontrahent</th><th>Wystawiona</th><th>Termin</th><th className="num">Brutto</th><th className="num">Do zapłaty</th><th>Status</th></tr></thead>
-            <tbody>
-              {data.items.map(i => (
-                <tr key={i.id}>
-                  <td><Link to={`/invoices/${i.id}`}>{i.number}</Link>{i.correctedNumber && <div className="muted small">korekta do {i.correctedNumber}</div>}</td>
-                  <td>{invoiceTypeLabel[i.type]}</td><td>{i.contractorName}</td>
-                  <td>{fmtDate(i.issueDate)}</td><td>{fmtDate(i.dueDate)}</td>
-                  <td className="num">{fmtMoney(i.gross)}</td>
-                  <td className="num">{i.status === 'canceled' || i.isCorrection ? '' : fmtMoney(i.remaining)}</td>
-                  <td><StatusBadge status={i.status}>{statusLabel[i.status]}</StatusBadge></td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot><tr><td colSpan={5}>Razem (bez anulowanych)</td>
-              <td className="num">{fmtMoney(data.totalGross)}</td><td className="num" data-testid="invoices-remaining">{fmtMoney(data.totalRemaining)}</td><td></td></tr></tfoot>
-          </table>
-          <div className="pager">
-            <Button small  disabled={page <= 1} onClick={() => setPage(page - 1)}>‹ Poprzednia</Button>
-            <span>Strona {page} z {pages} ({data.totalCount} faktur)</span>
-            <Button small  disabled={page>= pages} onClick={() => setPage(page + 1)}>Następna ›</Button>
-          </div>
-        </>
-      ))}
+      {data && (
+        <DataTable label="Lista faktur" columns={columns} rows={data.items} rowKey={i => i.id} loading={loading}
+          empty="Brak faktur dla wybranych kryteriów." sort={sort} onSort={s => { setSort(s); setPage(1) }} viewKey="invoices" csvName="faktury-widok"
+          selectable={{ label: i => `Zaznacz fakturę ${i.number}` }}
+          footer={{ label: 'Razem (bez anulowanych)', cells: { gross: fmtMoney(data.totalGross), remaining: <span data-testid="invoices-remaining">{fmtMoney(data.totalRemaining)}</span> } }}
+          pager={{ page, pageSize: data.pageSize, total: data.totalCount, onPage: setPage, unit: 'faktur' }} />
+      )}
     </>
   )
 }

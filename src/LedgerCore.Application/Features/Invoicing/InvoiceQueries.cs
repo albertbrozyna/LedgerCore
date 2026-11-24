@@ -22,13 +22,19 @@ public static class InvoiceStatus
 public static class ListInvoices
 {
     public record Query(InvoiceType? Type, Guid? ContractorId, DateTime? From, DateTime? To, string? Status, string? Search,
-        int Page = 1, int PageSize = 25) : IRequest<Response>;
+        int Page = 1, int PageSize = 25, string? Sort = null, string? Dir = null) : IRequest<Response>;
+
+    /// <summary>Dozwolone klucze sortowania (whitelist).</summary>
+    public static readonly string[] SortKeys = ["issue", "number", "type", "contractor", "due", "gross", "remaining", "status"];
 
     public record Item(Guid Id, InvoiceType Type, string Number, Guid ContractorId, string ContractorName, DateTime IssueDate,
         DateTime DueDate, decimal Net, decimal Vat, decimal Gross, decimal PaidAmount, decimal Remaining, string Status,
         bool IsCorrection, Guid? CorrectedInvoiceId, string? CorrectedNumber);
 
     public record Response(List<Item> Items, int TotalCount, int Page, int PageSize, decimal TotalGross, decimal TotalRemaining);
+
+    static int CompareKeys(object a, object b) =>
+        a is string sa && b is string sb ? string.Compare(sa, sb, StringComparison.CurrentCultureIgnoreCase) : Comparer<object>.Default.Compare(a, b);
 
     public class Handler(IAppDbContext db) : IRequestHandler<Query, Response>
     {
@@ -56,7 +62,23 @@ public static class ListInvoices
                 _ => true
             }).ToList();
 
-            var ordered = all.OrderByDescending(i => i.IssueDate).ThenByDescending(i => i.CreatedAt).ToList();
+            if (r.Sort is not null && !SortKeys.Contains(r.Sort.ToLowerInvariant()))
+                throw new DomainValidationException($"Nieprawidłowe sortowanie: {r.Sort}");
+            var desc = !string.Equals(r.Dir, "asc", StringComparison.OrdinalIgnoreCase);
+            Func<Invoice, object> key = (r.Sort?.ToLowerInvariant()) switch
+            {
+                "number" => i => i.Number,
+                "type" => i => i.Type,
+                "contractor" => i => i.Contractor!.Name,
+                "due" => i => i.DueDate,
+                "gross" => i => i.Gross,
+                "remaining" => i => i.IsCanceled || i.IsCorrection ? 0m : i.Remaining,
+                "status" => i => InvoiceStatus.Of(i, today),
+                _ => i => i.IssueDate,
+            };
+            var cmp = Comparer<object>.Create(CompareKeys);
+            var sorted = desc ? all.OrderByDescending(key, cmp) : all.OrderBy(key, cmp);
+            var ordered = sorted.ThenByDescending(i => i.CreatedAt).ThenBy(i => i.Id).ToList();
             var page = Math.Max(1, r.Page);
             var size = Math.Clamp(r.PageSize, 1, 200);
             var originalIds = ordered.Where(i => i.CorrectedInvoiceId != null).Select(i => i.CorrectedInvoiceId!.Value).Distinct().ToList();

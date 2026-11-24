@@ -33,8 +33,8 @@ namespace LedgerCore.Api.Features.Accounting
 
             var tx = app.MapVersionedGroup("transactions").WithTags("Transactions");
             tx.MapGet("", async (DateTime? from, DateTime? to, Guid? accountId, string? search, int? page, int? pageSize,
-                    ISender s, CancellationToken ct) =>
-                Results.Ok(await s.Send(new ListTransactions.Query(from, to, accountId, search, page ?? 1, pageSize ?? 25), ct)));
+                    string? sort, string? dir, ISender s, CancellationToken ct) =>
+                Results.Ok(await s.Send(new ListTransactions.Query(from, to, accountId, search, page ?? 1, pageSize ?? 25, sort, dir), ct)));
             tx.MapGet("{id:guid}", async (Guid id, ISender s, CancellationToken ct) =>
                 Results.Ok(await s.Send(new GetTransaction.Query(id), ct)));
             tx.MapPost("", async (CreateTransaction.Command c, ISender s, CancellationToken ct) =>

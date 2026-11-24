@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { api, type CompanyDto } from '../api'
+import { api, type AuditItem, type CompanyDto } from '../api'
 import { fmtDate } from '../format'
-import { Button, ErrorBox, Loading, Notice, PageHeader, useDialogs, useLoad } from '../design'
+import { Button, DataTable, ErrorBox, Loading, Notice, PageHeader, type Column, type SortState, useDialogs, useLoad } from '../design'
 
 export function AdminPage() {
   const { confirm } = useDialogs()
@@ -9,7 +9,14 @@ export function AdminPage() {
   const [date, setDate] = useState('')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
-  const audit = useLoad(() => api.audit({ search, page, pageSize: 25 }), [search, page])
+  const [sort, setSort] = useState<SortState | null>(null)
+  const audit = useLoad(() => api.audit({ search, page, pageSize: 25, sort: sort?.key, dir: sort?.dir }), [search, page, sort])
+  const auditColumns: Column<AuditItem>[] = [
+    { key: 'at', header: 'Kiedy', sortable: true, render: a => new Date(a.at + 'Z').toLocaleString('pl-PL'), csv: a => a.at },
+    { key: 'user', header: 'Użytkownik', sortable: true, render: a => a.userName, csv: a => a.userName },
+    { key: 'action', header: 'Akcja', sortable: true, render: a => a.action, csv: a => a.action },
+    { key: 'details', header: 'Szczegóły', render: a => a.details, csv: a => a.details },
+  ]
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const company = useLoad(() => api.company(), [])
@@ -17,7 +24,6 @@ export function AdminPage() {
   useEffect(() => { if (company.data) setC(company.data) }, [company.data])
   const [year, setYear] = useState(String(new Date().getFullYear() - 1))
   const backups = useLoad(() => api.backups(), [])
-  const pages = audit.data ? Math.max(1, Math.ceil(audit.data.totalCount / audit.data.pageSize)) : 1
 
   async function saveCompany(e: React.FormEvent) {
     e.preventDefault()
@@ -121,23 +127,9 @@ export function AdminPage() {
       </div>
       {audit.loading && !audit.data && <Loading />}
       {audit.data && (
-        <>
-          <table aria-label="Dziennik zdarzeń">
-            <thead><tr><th>Kiedy</th><th>Użytkownik</th><th>Akcja</th><th>Szczegóły</th></tr></thead>
-            <tbody>
-              {audit.data.items.map(a => (
-                <tr key={a.id}>
-                  <td>{new Date(a.at + 'Z').toLocaleString('pl-PL')}</td><td>{a.userName}</td><td>{a.action}</td><td>{a.details}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="pager">
-            <Button small  disabled={page <= 1} onClick={() => setPage(page - 1)}>‹ Poprzednia</Button>
-            <span>Strona {page} z {pages} ({audit.data.totalCount} wpisów)</span>
-            <Button small  disabled={page>= pages} onClick={() => setPage(page + 1)}>Następna ›</Button>
-          </div>
-        </>
+        <DataTable label="Dziennik zdarzeń" columns={auditColumns} rows={audit.data.items} rowKey={a => a.id} loading={audit.loading}
+          empty="Brak wpisów." sort={sort} onSort={s => { setSort(s); setPage(1) }} viewKey="audit" csvName="audyt-widok"
+          pager={{ page, pageSize: audit.data.pageSize, total: audit.data.totalCount, onPage: setPage, unit: 'wpisów' }} />
       )}
     </>
   )

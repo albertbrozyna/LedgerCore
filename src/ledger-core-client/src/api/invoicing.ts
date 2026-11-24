@@ -8,7 +8,7 @@ export const invoicingApi = {
   saveContractor: (id: string | null, b: { name: string; nip?: string; address?: string; email?: string; isActive?: boolean }) =>
     id ? json<void>('PUT', `/contractors/${id}`, b) : json<{ id: string }>('POST', '/contractors', b),
 
-  invoices: (p: { type?: InvoiceType; contractorId?: string; from?: string; to?: string; status?: string; search?: string; page?: number; pageSize?: number }) =>
+  invoices: (p: { type?: InvoiceType; contractorId?: string; from?: string; to?: string; status?: string; search?: string; page?: number; pageSize?: number; sort?: string; dir?: string }) =>
     json<InvoiceList>('GET', `/invoices${qs(p)}`),
   invoice: (id: string) => json<InvoiceDetail>('GET', `/invoices/${id}`),
   createInvoice: (b: {

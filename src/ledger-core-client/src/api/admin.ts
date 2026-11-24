@@ -16,7 +16,7 @@ export const adminApi = {
   closeYear: (year: number) => json<{ number: string; result: number }>('POST', '/admin/close-year', { year }),
   periodLock: () => json<{ lockedThrough?: string | null }>('GET', '/admin/period-lock'),
   setPeriodLock: (lockedThrough: string | null) => json<void>('PUT', '/admin/period-lock', { lockedThrough }),
-  audit: (p: { search?: string; page?: number; pageSize?: number }) => json<AuditList>('GET', `/admin/audit${qs(p)}`),
+  audit: (p: { search?: string; page?: number; pageSize?: number; sort?: string; dir?: string }) => json<AuditList>('GET', `/admin/audit${qs(p)}`),
 
   backup: () => download('/admin/backup', 'kopia.db'),
   backups: () => json<BackupItem[]>('GET', '/admin/backups'),

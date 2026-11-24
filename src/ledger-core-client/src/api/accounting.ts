@@ -17,7 +17,7 @@ export const accountingApi = {
   ledger: (id: string, from?: string, to?: string, page?: number, pageSize?: number) =>
     json<LedgerDto>('GET', `/accounts/${id}/ledger${qs({ from, to, page, pageSize })}`),
 
-  transactions: (p: { from?: string; to?: string; accountId?: string; search?: string; page?: number; pageSize?: number }) =>
+  transactions: (p: { from?: string; to?: string; accountId?: string; search?: string; page?: number; pageSize?: number; sort?: string; dir?: string }) =>
     json<TxList>('GET', `/transactions${qs(p)}`),
   transaction: (id: string) => json<TxDetail>('GET', `/transactions/${id}`),
   createTransaction: (b: { description: string; date: string; entries: { accountId: string; amount: number; side: Side }[] }) =>

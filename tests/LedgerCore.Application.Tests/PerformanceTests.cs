@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using LedgerCore.Application.Features.Accounts.Queries.List;
 using LedgerCore.Application.Features.Reports;
+using LedgerCore.Application.Features.Transactions.Queries;
 using Xunit.Abstractions;
 
 namespace LedgerCore.Application.Tests;
@@ -66,4 +67,17 @@ public class PerformanceTests : IClassFixture<PerformanceTests.Fixture>
     [Fact]
     public Task ListAccounts_under_1s() =>
         Measure("Lista kont z saldami", 1000, db => new ListAccounts.Handler(db).Handle(new(), Ct));
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData("amount", "desc")]
+    [InlineData("number", "asc")]
+    [InlineData("description", "asc")]
+    public Task Journal_page_under_500ms(string? sort, string? dir) =>
+        Measure($"Dziennik, strona 1 (sort: {sort ?? "domyślnie"})", 500, db =>
+            new ListTransactions.Handler(db).Handle(new(new DateTime(2024, 1, 1), new DateTime(2024, 12, 31), null, null, 1, 20, sort, dir), Ct));
+
+    [Fact]
+    public Task Journal_search_under_500ms() =>
+        Measure("Dziennik, wyszukiwanie", 500, db =>
+            new ListTransactions.Handler(db).Handle(new(null, null, null, "Księgowanie 4242", 1, 20), Ct));
 }

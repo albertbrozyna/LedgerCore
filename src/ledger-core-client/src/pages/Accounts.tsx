@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { api, type AccountType } from '../api'
+import { api, type AccountDto, type AccountType } from '../api'
 import { useAuth } from '../auth'
 import { accountTypeLabel, fmtMoney } from '../format'
-import { Badge, Button, ErrorBox, Loading, Notice, PageHeader, useLoad } from '../design'
+import { Badge, Button, DataTable, ErrorBox, Loading, Notice, PageHeader, type Column, useLoad } from '../design'
 
 const types = Object.keys(accountTypeLabel) as AccountType[]
 
@@ -34,6 +34,33 @@ export function AccountsPage() {
     catch (err) { setFormError((err as Error).message) }
   }
 
+  const columns: Column<AccountDto>[] = [
+    { key: 'code', header: 'Numer', sortable: true, sortValue: a => a.code, filterText: a => a.code, render: a => a.code },
+    { key: 'name', header: 'Nazwa', sortable: true, sortValue: a => a.name, filterText: a => a.name, render: a =>
+      editing === a.id ? <input aria-label="Nazwa konta" value={editName} onChange={e => setEditName(e.target.value)} />
+        : <>{a.name}{!a.isActive && <Badge> nieaktywne</Badge>}</> },
+    { key: 'type', header: 'Typ', sortable: true, sortValue: a => accountTypeLabel[a.type], filterText: a => accountTypeLabel[a.type], render: a => accountTypeLabel[a.type] },
+    { key: 'debit', header: 'Obroty Wn', sortable: true, align: 'right', sortValue: a => a.debitTotal, render: a => fmtMoney(a.debitTotal) },
+    { key: 'credit', header: 'Obroty Ma', sortable: true, align: 'right', sortValue: a => a.creditTotal, render: a => fmtMoney(a.creditTotal) },
+    { key: 'balance', header: 'Saldo', sortable: true, align: 'right', sortValue: a => a.balance, render: a => fmtMoney(a.balance) },
+    { key: 'actions', header: 'Akcje', fixed: true, render: a => (
+      <span className="actions">
+        <Link to={`/accounts/${a.id}/ledger`}>Karta konta</Link>
+        {canWrite && (editing === a.id ? (
+          <>
+            <Button small onClick={() => save(a.id, a.isActive, editName)}>Zapisz</Button>
+            <Button variant="link" small onClick={() => setEditing(null)}>Anuluj</Button>
+          </>
+        ) : (
+          <>
+            <Button variant="link" small onClick={() => { setEditing(a.id); setEditName(a.name) }}>Zmień nazwę</Button>
+            <Button variant="link" small onClick={() => save(a.id, !a.isActive, a.name)}>{a.isActive ? 'Dezaktywuj' : 'Aktywuj'}</Button>
+          </>
+        ))}
+      </span>) },
+  ]
+
+
   return (
     <>
       <PageHeader title="Plan kont">
@@ -57,39 +84,8 @@ export function AccountsPage() {
 
       {loading && !data && <Loading />}
       {data && (
-        <table>
-          <thead><tr><th>Numer</th><th>Nazwa</th><th>Typ</th><th className="num">Obroty Wn</th><th className="num">Obroty Ma</th><th className="num">Saldo</th><th></th></tr></thead>
-          <tbody>
-            {data.map(a => (
-              <tr key={a.id} className={a.isActive ? '' : 'inactive'}>
-                <td>{a.code}</td>
-                <td>
-                  {editing === a.id ? (
-                    <input aria-label="Nazwa konta" value={editName} onChange={e => setEditName(e.target.value)} />
-                  ) : (<>{a.name}{!a.isActive && <Badge> nieaktywne</Badge>}</>)}
-                </td>
-                <td>{accountTypeLabel[a.type]}</td>
-                <td className="num">{fmtMoney(a.debitTotal)}</td>
-                <td className="num">{fmtMoney(a.creditTotal)}</td>
-                <td className="num">{fmtMoney(a.balance)}</td>
-                <td className="actions">
-                  <Link to={`/accounts/${a.id}/ledger`}>Karta konta</Link>
-                  {canWrite && (editing === a.id ? (
-                    <>
-                      <Button small  onClick={() => save(a.id, a.isActive, editName)}>Zapisz</Button>
-                      <Button variant="link" small  onClick={() => setEditing(null)}>Anuluj</Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button variant="link" small  onClick={() => { setEditing(a.id); setEditName(a.name) }}>Zmień nazwę</Button>
-                      <Button variant="link" small  onClick={() => save(a.id, !a.isActive, a.name)}>{a.isActive ? 'Dezaktywuj' : 'Aktywuj'}</Button>
-                    </>
-                  ))}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <DataTable label="Plan kont" columns={columns} rows={data} rowKey={a => a.id} loading={loading}
+          empty="Brak kont." rowClass={a => (a.isActive ? '' : 'inactive')} viewKey="accounts" csvName="plan-kont-widok" />
       )}
     </>
   )

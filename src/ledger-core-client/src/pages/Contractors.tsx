@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { api, type ContractorDto } from '../api'
 import { useAuth } from '../auth'
 import { fmtMoney, fmtMoneyOrDash } from '../format'
-import { Badge, Button, ErrorBox, Loading, Notice, PageHeader, useLoad } from '../design'
+import { Badge, Button, DataTable, ErrorBox, Loading, Notice, PageHeader, type Column, useLoad } from '../design'
 
 const empty = { name: '', nip: '', address: '', email: '' }
 
@@ -40,6 +40,23 @@ export function ContractorsPage() {
     catch (err) { setFormError((err as Error).message) }
   }
 
+  const columns: Column<ContractorDto>[] = [
+    { key: 'name', header: 'Nazwa', sortable: true, sortValue: c => c.name, filterText: c => c.name, render: c => <>{c.name}{!c.isActive && <Badge> nieaktywny</Badge>}</> },
+    { key: 'nip', header: 'NIP', sortable: true, sortValue: c => c.nip ?? '', filterText: c => c.nip ?? '', render: c => c.nip ?? '' },
+    { key: 'address', header: 'Adres', sortValue: c => c.address ?? '', filterText: c => c.address ?? '', render: c => c.address ?? '' },
+    { key: 'receivables', header: 'Należności', sortable: true, align: 'right', sortValue: c => c.receivables, render: c => fmtMoneyOrDash(c.receivables) },
+    { key: 'payables', header: 'Zobowiązania', sortable: true, align: 'right', sortValue: c => c.payables, render: c => fmtMoneyOrDash(c.payables) },
+    { key: 'actions', header: 'Akcje', fixed: true, render: c => (
+      <span className="actions">
+        <Link to={`/invoices?contractorId=${c.id}`}>Faktury</Link>
+        {canWrite && <>
+          <Button variant="link" small onClick={() => startEdit(c)}>Edytuj</Button>
+          <Button variant="link" small onClick={() => toggle(c)}>{c.isActive ? 'Dezaktywuj' : 'Aktywuj'}</Button>
+        </>}
+      </span>) },
+  ]
+
+
   return (
     <>
       <PageHeader title="Kontrahenci">
@@ -64,31 +81,11 @@ export function ContractorsPage() {
       </div>
 
       {loading && !data && <Loading />}
-      {data && (data.length === 0 ? <p className="muted">Brak kontrahentów.</p> : (
-        <table>
-          <thead><tr><th>Nazwa</th><th>NIP</th><th>Adres</th><th className="num">Należności</th><th className="num">Zobowiązania</th><th></th></tr></thead>
-          <tbody>
-            {data.map(c => (
-              <tr key={c.id} className={c.isActive ? '' : 'inactive'}>
-                <td>{c.name}{!c.isActive && <Badge> nieaktywny</Badge>}</td>
-                <td>{c.nip ?? ''}</td><td>{c.address ?? ''}</td>
-                <td className="num">{fmtMoneyOrDash(c.receivables)}</td>
-                <td className="num">{fmtMoneyOrDash(c.payables)}</td>
-                <td className="actions">
-                  <Link to={`/invoices?contractorId=${c.id}`}>Faktury</Link>
-                  {canWrite && <>
-                    <Button variant="link" small  onClick={() => startEdit(c)}>Edytuj</Button>
-                    <Button variant="link" small  onClick={() => toggle(c)}>{c.isActive ? 'Dezaktywuj' : 'Aktywuj'}</Button>
-                  </>}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot><tr><td colSpan={3}>Razem</td>
-            <td className="num">{fmtMoney(data.reduce((s, c) => s + c.receivables, 0))}</td>
-            <td className="num">{fmtMoney(data.reduce((s, c) => s + c.payables, 0))}</td><td></td></tr></tfoot>
-        </table>
-      ))}
+      {data && (
+        <DataTable label="Lista kontrahentów" columns={columns} rows={data} rowKey={c => c.id} loading={loading}
+          empty="Brak kontrahentów." rowClass={c => (c.isActive ? '' : 'inactive')} viewKey="contractors" csvName="kontrahenci-widok"
+          footer={{ label: 'Razem', cells: { receivables: fmtMoney(data.reduce((s, c) => s + c.receivables, 0)), payables: fmtMoney(data.reduce((s, c) => s + c.payables, 0)) } }} />
+      )}
     </>
   )
 }

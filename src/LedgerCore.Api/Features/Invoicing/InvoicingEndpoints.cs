@@ -33,8 +33,8 @@ namespace LedgerCore.Api.Features.Invoicing
 
             var invoices = app.MapVersionedGroup("invoices").WithTags("Invoices");
             invoices.MapGet("", async (InvoiceType? type, Guid? contractorId, DateTime? from, DateTime? to, string? status, string? search,
-                    int? page, int? pageSize, ISender s, CancellationToken ct) =>
-                Results.Ok(await s.Send(new ListInvoices.Query(type, contractorId, from, to, status, search, page ?? 1, pageSize ?? 25), ct)));
+                    int? page, int? pageSize, string? sort, string? dir, ISender s, CancellationToken ct) =>
+                Results.Ok(await s.Send(new ListInvoices.Query(type, contractorId, from, to, status, search, page ?? 1, pageSize ?? 25, sort, dir), ct)));
             invoices.MapGet("{id:guid}", async (Guid id, ISender s, CancellationToken ct) => Results.Ok(await s.Send(new GetInvoice.Query(id), ct)));
             invoices.MapPost("", async (CreateInvoice.Command c, ISender s, CancellationToken ct) => Results.Ok(await s.Send(c, ct)))
                 .RequireAuthorization(Policies.CanWrite);
@@ -77,8 +77,8 @@ namespace LedgerCore.Api.Features.Invoicing
             }).RequireAuthorization(Policies.AdminOnly);
             admin.MapPost("close-year", async (CloseYearBody b, ISender s, CancellationToken ct) =>
                 Results.Ok(await s.Send(new CloseYear.Command(b.Year), ct))).RequireAuthorization(Policies.AdminOnly);
-            admin.MapGet("audit", async (string? search, int? page, int? pageSize, ISender s, CancellationToken ct) =>
-                Results.Ok(await s.Send(new ListAudit.Query(search, page ?? 1, pageSize ?? 50), ct))).RequireAuthorization(Policies.AdminOnly);
+            admin.MapGet("audit", async (string? search, int? page, int? pageSize, string? sort, string? dir, ISender s, CancellationToken ct) =>
+                Results.Ok(await s.Send(new ListAudit.Query(search, page ?? 1, pageSize ?? 50, sort, dir), ct))).RequireAuthorization(Policies.AdminOnly);
         }
     }
 }

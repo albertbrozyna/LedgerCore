@@ -58,3 +58,4 @@ Legenda: ✅ zrobione · ⬜ później · ⛔ zablokowane zewnętrznie
 - ✅ Pipeline CI (GitHub Actions): build, testy jednostkowe, build UI, E2E
 - ✅ Design system: tokeny, ciemny motyw, komponenty bazowe, modale zamiast okien przeglądarki, nawigacja grupowana
 - ✅ Raporty i pulpit liczone w SQL (200 000 zapisów: pulpit ~0,3 s), karta konta ze stronicowaniem
+- ✅ Tabele: sortowanie po stronie serwera, filtry, wybór kolumn, zapisane widoki, eksport widoku CSV, audyt dostępności (axe)

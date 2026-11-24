@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { api, type Side } from '../api'
+import { api, type Side, type TxItem } from '../api'
 import { useAuth } from '../auth'
 import { fmtDate, fmtMoney, parseAmount, todayIso, yearStartIso } from '../format'
-import { Badge, Button, ErrorBox, Loading, Notice, PageHeader, PrintHeader, useDialogs, useLoad } from '../design'
+import { Badge, Button, DataTable, ErrorBox, Loading, Notice, PageHeader, PrintHeader, SavedViews, type Column, type SortState, useDialogs, useLoad } from '../design'
 
 export function JournalPage() {
   const [from, setFrom] = useState(yearStartIso())
@@ -11,11 +11,20 @@ export function JournalPage() {
   const [search, setSearch] = useState('')
   const [accountId, setAccountId] = useState('')
   const [page, setPage] = useState(1)
+  const [sort, setSort] = useState<SortState | null>(null)
   const [exportError, setExportError] = useState('')
+  const { user } = useAuth()
   const accounts = useLoad(() => api.accounts(true), [])
   const { data, error, loading } = useLoad(
-    () => api.transactions({ from, to, search, accountId, page, pageSize: 20 }), [from, to, search, accountId, page])
-  const pages = data ? Math.max(1, Math.ceil(data.totalCount / data.pageSize)) : 1
+    () => api.transactions({ from, to, search, accountId, page, pageSize: 20, sort: sort?.key, dir: sort?.dir }), [from, to, search, accountId, page, sort])
+
+  const columns: Column<TxItem>[] = [
+    { key: 'number', header: 'Numer', sortable: true, render: t => <Link to={`/transactions/${t.id}`}>{t.number}</Link>, csv: t => t.number },
+    { key: 'date', header: 'Data', sortable: true, render: t => fmtDate(t.date), csv: t => t.date.slice(0, 10) },
+    { key: 'description', header: 'Opis', sortable: true, csv: t => t.description,
+      render: t => <>{t.description}{t.isReversal && <Badge> storno</Badge>}{t.isReversed && <Badge tone="warn"> stornowane</Badge>}</> },
+    { key: 'amount', header: 'Kwota', sortable: true, align: 'right', render: t => fmtMoney(t.amount), csv: t => t.amount },
+  ]
 
   return (
     <>
@@ -26,6 +35,8 @@ export function JournalPage() {
       </PageHeader>
       <PrintHeader title="Dziennik księgowań" period={`${from} – ${to || 'dziś'}`} />
       <ErrorBox message={error || exportError} />
+      <SavedViews storageKey={`journal.${user?.id}`} state={{ from, to, search, accountId }}
+        onApply={v => { setFrom(v.from); setTo(v.to); setSearch(v.search); setAccountId(v.accountId); setPage(1) }} />
       <div className="card form-row no-print">
         <label>Od<input type="date" value={from} onChange={e => { setFrom(e.target.value); setPage(1) }} /></label>
         <label>Do<input type="date" value={to} onChange={e => { setTo(e.target.value); setPage(1) }} /></label>
@@ -38,29 +49,12 @@ export function JournalPage() {
         <label className="grow">Szukaj<input placeholder="opis lub numer" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} /></label>
       </div>
       {loading && !data && <Loading />}
-      {data && (data.items.length === 0 ? <p className="muted">Brak księgowań dla wybranych kryteriów.</p> : (
-        <>
-          <table>
-            <thead><tr><th>Numer</th><th>Data</th><th>Opis</th><th className="num">Kwota</th><th></th></tr></thead>
-            <tbody>
-              {data.items.map(t => (
-                <tr key={t.id}>
-                  <td><Link to={`/transactions/${t.id}`}>{t.number}</Link></td>
-                  <td>{fmtDate(t.date)}</td>
-                  <td>{t.description}{t.isReversal && <Badge> storno</Badge>}{t.isReversed && <Badge tone="warn"> stornowane</Badge>}</td>
-                  <td className="num">{fmtMoney(t.amount)}</td>
-                  <td></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="pager">
-            <Button small  disabled={page <= 1} onClick={() => setPage(page - 1)}>‹ Poprzednia</Button>
-            <span>Strona {page} z {pages} ({data.totalCount} księgowań)</span>
-            <Button small  disabled={page>= pages} onClick={() => setPage(page + 1)}>Następna ›</Button>
-          </div>
-        </>
-      ))}
+      {data && (
+        <DataTable label="Dziennik księgowań" columns={columns} rows={data.items} rowKey={t => t.id} loading={loading}
+          empty="Brak księgowań dla wybranych kryteriów." sort={sort} onSort={s => { setSort(s); setPage(1) }} viewKey="journal" csvName="dziennik-widok"
+          selectable={{ label: t => `Zaznacz księgowanie ${t.number}` }}
+          pager={{ page, pageSize: data.pageSize, total: data.totalCount, onPage: setPage, unit: 'księgowań' }} />
+      )}
     </>
   )
 }
