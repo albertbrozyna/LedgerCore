@@ -86,9 +86,17 @@ FAKTURY KORYGUJĄCE
   Fakturę z aktywną korektą anulujesz dopiero po anulowaniu jej korekt.
 
 IMPORT WYCIĄGU BANKOWEGO
-  Menu "Import wyciągu": wczytaj plik CSV z banku (kolumny: data, kwota, tytuł, opcjonalnie kontrahent) albo wklej jego treść.
-  Wpływy dopasują się do faktur sprzedaży, wypłaty do faktur zakupu (po numerze faktury w tytule i kwocie).
-  Sprawdź dopasowania, popraw w razie potrzeby i kliknij "Zaksięguj zaznaczone". Nie importuj dwa razy tego samego wyciągu.
+  Menu "Import wyciągu": wybierz konto bankowe i wczytaj plik wyciągu (CSV, MT940 albo Elixir-0 - format rozpoznawany po zawartości)
+  lub wklej jego treść. CSV: kolumny data, kwota, tytuł, opcjonalnie kontrahent (można wybrać profil banku: mBank, PKO BP, ING;
+  profile opierają się na typowych nagłówkach eksportów - przy innych nazwach kolumn zostaw "Automatyczny"). Elixir-0 nie mówi,
+  czy operacja jest wpływem czy wypłatą - podaj numer rachunku firmy (26 cyfr). Pliki w kodowaniu Windows-1250 są odczytywane poprawnie.
+  Każda operacja jest zapisywana raz: ponowny import tego samego (lub nakładającego się) wyciągu pomija duplikaty i nie tworzy
+  drugich płatności. Wpływy dopasują się do faktur sprzedaży, wypłaty do faktur zakupu (po numerze faktury w tytule i kwocie).
+  Sprawdź dopasowania, popraw w razie potrzeby i kliknij "Zaksięguj zaznaczone". Operację można też pominąć i przywrócić.
+  Zakładka "Reguły księgowania": np. tekst "Opłata za prowadzenie" + kierunek Wypłata + konto 402 księguje takie operacje wprost na
+  konto (bez faktury); reguły działają przy imporcie (można odznaczyć) i przyciskiem "Zastosuj reguły do niezaksięgowanych".
+  Zakładka "Uzgodnienie z bankiem": porównuje saldo konta w księdze z saldem końcowym z wyciągu (MT940 podaje je w pliku, w pozostałych
+  formatach wpisz je ręcznie) i pokazuje różnicę oraz listę niezaksięgowanych operacji. Funkcja dotyczy firm z pełną księgowością.
 
 ZAŁĄCZNIKI I SZABLONY
   Na karcie faktury możesz dodać skan lub PDF (do 10 MB). Przy "Nowym księgowaniu" zapiszesz bieżące zapisy jako

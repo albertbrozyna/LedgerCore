@@ -1,15 +1,17 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, type NumberReset } from '../api'
-import { Button, useLoad } from '../design'
+import { Button, ErrorBox, useLoad } from '../design'
 
 const resetLabel: Record<NumberReset, string> = { Yearly: 'Co rok', Monthly: 'Co miesiąc', Never: 'Nigdy (numeracja ciągła)' }
 
 /** Wzór numeru faktur sprzedaży bieżącej firmy z podglądem następnego numeru. */
-export function NumberingSection({ onError, onNotice }: { onError: (m: string) => void; onNotice: (m: string) => void }) {
+// Błędy tej sekcji są lokalne: wspólny komunikat strony nie może być kasowany przez podgląd na żywo.
+export function NumberingSection({ onNotice }: { onNotice: (m: string) => void }) {
   const { data, reload } = useLoad(() => api.numbering(), [])
   const [pattern, setPattern] = useState('')
   const [reset, setReset] = useState<NumberReset>('Yearly')
   const [example, setExample] = useState('')
+  const [error, setError] = useState('')
 
   useEffect(() => { if (data) { setPattern(data.pattern); setReset(data.reset); setExample(data.nextExample) } }, [data])
 
@@ -19,8 +21,8 @@ export function NumberingSection({ onError, onNotice }: { onError: (m: string) =
     let cancelled = false
     const timer = setTimeout(() => {
       api.previewNumbering(pattern, reset)
-        .then(r => { if (!cancelled) { setExample(r.example); onError('') } })
-        .catch(err => { if (!cancelled) { setExample(''); onError((err as Error).message) } })
+        .then(r => { if (!cancelled) { setExample(r.example); setError('') } })
+        .catch(err => { if (!cancelled) { setExample(''); setError((err as Error).message) } })
     }, 250)
     return () => { cancelled = true; clearTimeout(timer) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -28,14 +30,15 @@ export function NumberingSection({ onError, onNotice }: { onError: (m: string) =
 
   async function save(e: FormEvent) {
     e.preventDefault()
-    onError(''); onNotice('')
-    try { await api.saveNumbering(pattern, reset); onNotice('Zapisano wzór numeracji faktur sprzedaży'); reload() } catch (err) { onError((err as Error).message) }
+    setError(''); onNotice('')
+    try { await api.saveNumbering(pattern, reset); onNotice('Zapisano wzór numeracji faktur sprzedaży'); reload() } catch (err) { setError((err as Error).message) }
   }
 
   if (!data) return null
   return (
     <>
       <h2>Numeracja faktur sprzedaży</h2>
+      <ErrorBox message={error} />
       <form className="card" onSubmit={save} aria-label="Numeracja faktur">
         <div className="form-row">
           <label className="grow">Wzór numeru<input value={pattern} onChange={e => setPattern(e.target.value)} required maxLength={60} /></label>

@@ -186,3 +186,20 @@ export interface RecurringGenerateResult {
   skipped: { template: string; date: string; reason: string }[]
 }
 export interface NumberingDto { pattern: string; reset: NumberReset; nextExample: string }
+
+export type BankFormat = 'Csv' | 'Mt940' | 'Elixir'
+export type CsvProfile = 'Auto' | 'Mbank' | 'Pko' | 'Ing'
+export type BankTxStatus = 'New' | 'Posted' | 'Skipped'
+export type RuleDirection = 'Any' | 'In' | 'Out'
+export interface BankRowDto { id: string; date: string; amount: number; title: string; counterparty: string; counterpartyAccount: string; status: BankTxStatus; isDuplicate: boolean; invoiceId?: string | null }
+export interface BankImportResult {
+  statementId: string; imported: number; duplicates: number; skipped: number; openingBalance?: number | null; closingBalance?: number | null; closingDate?: string | null
+  rulesPosted: number; ruleErrors: string[]; rows: BankRowDto[]
+}
+export interface BankRuleDto { id: string; name: string; matchText: string; direction: RuleDirection; targetAccountId: string; targetAccount: string; description?: string | null; isActive: boolean }
+export interface BankStatementDto { id: string; fileName: string; format: string; importedAt: string; importedBy: string; openingBalance?: number | null; closingBalance?: number | null; closingDate?: string | null; importedCount: number; duplicateCount: number; skippedCount: number }
+export interface BankReconciliationDto {
+  accountId: string; asOf: string; ledgerBalance: number; statementBalance?: number | null; statementSource: string; statementDate?: string | null
+  difference?: number | null; matches: boolean; unpostedSum: number; differenceAfterUnposted?: number | null
+  unposted: { id: string; date: string; amount: number; title: string; counterparty: string }[]
+}

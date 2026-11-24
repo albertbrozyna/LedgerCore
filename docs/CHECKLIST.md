@@ -28,7 +28,7 @@ Legenda: ✅ zrobione · ⬜ później · ⛔ zablokowane zewnętrznie
 
 ## Rozrachunki i bank
 - ✅ Rozrachunki z wiekowaniem, salda kontrahentów
-- ✅ Import wyciągu bankowego (CSV) z automatycznym dopasowaniem płatności do faktur
+- ✅ Import wyciągu bankowego (CSV, MT940, Elixir-0) z zapisem operacji, deduplikacją, dopasowaniem płatności do faktur, regułami księgowania i uzgodnieniem salda
 - ⬜ Karta kontrahenta (historia rozliczeń)
 
 ## Kontrola i bezpieczeństwo

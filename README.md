@@ -20,7 +20,7 @@ Bez serwera bazy danych i bez Dockera – wszystko w jednej aplikacji: .NET 10 (
 - **Wydruki raportów** z nagłówkiem firmy i okresem oraz **eksporty CSV** (dziennik, obroty i salda, rachunek wyników, bilans, rozrachunki, rejestry VAT) – otwierają się poprawnie w polskim Excelu
 - **Zamknięcie okresu** (blokada księgowania wstecz) i **zamknięcie roku obrotowego** (wynik na konto 860, salda bilansowe przechodzą na nowy rok)
 - **Dziennik audytu**: kto, kiedy i co zmienił
-- **Import wyciągu bankowego (CSV)** z automatycznym dopasowaniem wpłat i wypłat do faktur (numer w tytule, kwota, kontrahent) i księgowaniem płatności
+- **Import wyciągu bankowego (CSV, MT940, Elixir-0)** z zapisem operacji i ochroną przed podwójnym importem, automatycznym dopasowaniem wpłat i wypłat do faktur (numer w tytule, kwota, kontrahent), regułami księgowania (np. opłaty bankowe) i uzgodnieniem salda z bankiem
 - **Załączniki do faktur** (PDF/PNG/JPG do 10 MB, kontrola zawartości pliku)
 - **Szablony księgowań** dla powtarzalnych operacji
 - **Pulpit**: wykres przychodów i kosztów z 12 miesięcy oraz kalendarz terminów podatkowych (orientacyjny)

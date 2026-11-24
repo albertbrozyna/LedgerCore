@@ -103,7 +103,7 @@ export function AdminPage() {
         <Button disabled={newMode === mode} onClick={changeMode}>Zmień tryb</Button>
       </div>
 
-      <NumberingSection onError={setError} onNotice={setNotice} />
+      <NumberingSection onNotice={setNotice} />
 
       <MailSettingsSection onError={setError} onNotice={setNotice} />
       <InterestRatesSection onError={setError} onNotice={setNotice} />

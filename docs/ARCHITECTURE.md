@@ -39,6 +39,12 @@ Domena nie zna EF ani HTTP. Handlery Application używają `IAppDbContext` (zaim
   `CorrectedAmount` na fakturze korygowanej zmienia `Remaining`. Korekta sama nie podlega płatności.
 - Faktury i płatności mają własne księgowania – `ReverseTransaction` je odrzuca (anulowanie przez `CancelInvoice`).
 
+## Wyciągi bankowe
+
+- `BankStatement` (plik), `BankTransaction` (operacja: Nowa/Zaksięgowana/Pominięta), `BankRule` – wszystko `ICompanyOwned`. Parsery (`IBankParser`: CSV z profilami, MT940, Elixir-0) działają po stronie serwera (`Features/Bank`); nowy format = nowa klasa + wpis w `BankParsers.For`.
+- Deduplikacja: skrót SHA-256 (rachunek firmy + data + kwota + znormalizowany tytuł + rachunek kontrahenta + numer egzemplarza w pliku) z unikalnym indeksem (firma, rachunek, skrót). Dwie identyczne operacje tego samego dnia są dwiema operacjami, a ten sam plik nie dubluje żadnej.
+- Księgowanie: do faktury przez `RecordPayment` (jedna operacja = jedna płatność) albo regułą bezpośrednio na konto (Wn/Ma bank). Uzgodnienie: saldo konta w księdze na dzień (`LedgerQueries.Sums`) vs saldo końcowe z MT940 lub wpisane ręcznie. Dostępne tylko w pełnej księgowości.
+
 ## Bezpieczeństwo i audyt
 
 - JWT (Identity), role `Admin` / `Accountant` / `Viewer`; polityki `Policies.AdminOnly`, `Policies.CanWrite`; domyślnie każdy endpoint wymaga logowania.

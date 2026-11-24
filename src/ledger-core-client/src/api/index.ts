@@ -1,6 +1,7 @@
 // Jeden punkt wejścia do API: `import { api } from '../api'`.
 import { accountingApi } from './accounting'
 import { adminApi } from './admin'
+import { bankApi } from './bank'
 import { collectionsApi } from './collections'
 import { companiesApi } from './companies'
 import { invoicingApi } from './invoicing'
@@ -19,6 +20,7 @@ export const api = {
   ...registersApi,
   ...collectionsApi,
   ...recurringApi,
+  ...bankApi,
 }
 
 export { ApiError, companyStore, setUnauthorizedHandler, tokens } from './http'

@@ -41,6 +41,9 @@ public class LedgerDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     public DbSet<CollectionNoticeInvoice> CollectionNoticeInvoices { get; set; }
     public DbSet<RecurringInvoice> RecurringInvoices { get; set; }
     public DbSet<RecurringInvoiceLine> RecurringInvoiceLines { get; set; }
+    public DbSet<BankStatement> BankStatements { get; set; }
+    public DbSet<BankTransaction> BankTransactions { get; set; }
+    public DbSet<BankRule> BankRules { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

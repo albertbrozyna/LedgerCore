@@ -27,6 +27,9 @@ namespace LedgerCore.Application.Common.Interfaces
         DbSet<CollectionNoticeInvoice> CollectionNoticeInvoices { get; }
         DbSet<RecurringInvoice> RecurringInvoices { get; }
         DbSet<RecurringInvoiceLine> RecurringInvoiceLines { get; }
+        DbSet<BankStatement> BankStatements { get; }
+        DbSet<BankTransaction> BankTransactions { get; }
+        DbSet<BankRule> BankRules { get; }
 
         /// <summary>Firma bieżącego żądania (z nagłówka X-Company-Id).</summary>
         Guid CurrentCompanyId { get; }
