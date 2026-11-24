@@ -27,9 +27,14 @@ public static class LedgerQueries
     /// </summary>
     public static async Task<Dictionary<Guid, AccountSum>> Sums(
         IAppDbContext db, DateTime? from, DateTime? to, bool excludeClosing, Guid? accountId, CancellationToken ct)
+        => await SumsFor(db, from, to, excludeClosing, accountId.HasValue ? [accountId.Value] : null, ct);
+
+    /// <summary>Jak wyżej, ale dla wskazanych kont (null = wszystkie).</summary>
+    public static async Task<Dictionary<Guid, AccountSum>> SumsFor(
+        IAppDbContext db, DateTime? from, DateTime? to, bool excludeClosing, List<Guid>? accountIds, CancellationToken ct)
     {
         var q = db.JournalEntries.AsNoTracking().AsQueryable();
-        if (accountId.HasValue) q = q.Where(e => e.AccountId == accountId.Value);
+        if (accountIds != null) q = q.Where(e => accountIds.Contains(e.AccountId));
         if (from.HasValue) q = q.Where(e => e.Date >= from.Value.Date);
         if (to.HasValue) q = q.Where(e => e.Date <= to.Value.Date);
         if (excludeClosing) q = q.Where(e => !e.IsClosing);

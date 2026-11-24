@@ -14,6 +14,7 @@ export const accountingApi = {
   accounts: (includeInactive = false) => json<AccountDto[]>('GET', `/accounts${qs({ includeInactive: includeInactive ? 'true' : undefined })}`),
   createAccount: (b: { name: string; code: string; type: AccountType }) => json('POST', '/accounts', b),
   updateAccount: (id: string, b: { name: string; isActive: boolean }) => json<void>('PUT', `/accounts/${id}`, b),
+  accountBalances: (accountIds: string[]) => json<{ accountId: string; balance: number }[]>('POST', '/accounts/balances', { accountIds }),
   ledger: (id: string, from?: string, to?: string, page?: number, pageSize?: number) =>
     json<LedgerDto>('GET', `/accounts/${id}/ledger${qs({ from, to, page, pageSize })}`),
 

@@ -105,3 +105,11 @@ export interface CompanyAdminItem { id: string; name: string; nip?: string | nul
 export interface BackupItem { name: string; size: number; created: string; manual: boolean }
 export interface AuditItem { id: string; at: string; userName: string; action: string; details: string }
 export interface AuditList { items: AuditItem[]; totalCount: number; page: number; pageSize: number }
+
+// ---- Wyszukiwarka globalna ----
+export interface SearchResult {
+  accounts: { id: string; code: string; name: string }[]
+  contractors: { id: string; name: string; nip?: string | null }[]
+  invoices: { id: string; number: string; contractorName: string; gross: number; isCanceled: boolean }[]
+  transactions: { id: string; number: string; description: string; date: string }[]
+}

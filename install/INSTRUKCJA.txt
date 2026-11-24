@@ -28,6 +28,19 @@ CODZIENNA PRACA
     (odblokować okres można, ale księgowanie zamykające pozostaje - w razie pomyłki zrób storno ręcznie).
   - KSeF i JPK_V7: w tej wersji brak generowania plików dla urzędu - użyj rejestrów VAT (Raporty) jako podstawy.
 
+WYSZUKIWARKA I SKRÓTY KLAWIATUROWE
+  Ctrl+K (albo przycisk "Wyszukiwarka" u góry) - znajdziesz konto, kontrahenta (nazwa lub NIP), fakturę (numer)
+  i księgowanie (numer lub opis) w bieżącej firmie oraz polecenia ("Nowe księgowanie", "Raporty", "Przełącz firmę...").
+  Strzałki wybierają pozycję, Enter ją otwiera, Esc zamyka okno.
+  Poza polami formularzy: N - nowe księgowanie, F - nowa faktura sprzedaży, Alt+strzałka w górę/w dół - poprzednia/
+  następna firma, ? - lista skrótów. Rola "Podgląd" nie ma skrótów zapisu.
+
+SZYBKIE KSIĘGOWANIE
+  Konto wybierasz wpisując numer lub fragment nazwy (podpowiedzi; ostatnio używane konta są na górze) - Enter lub Tab
+  zatwierdza. Po wyborze konta w nowym wierszu brakująca kwota drugiej strony uzupełnia się sama. Enter w polu kwoty
+  przechodzi dalej (w ostatnim polu - dodaje wiersz), Ctrl+Enter księguje. Pod formularzem widać saldo wybranych kont
+  przed i po księgowaniu. "Kopiuj jako nowe" (na liście i w szczegółach) tworzy nowe księgowanie z datą dzisiejszą.
+
 WIELE FIRM (KLIENCI BIURA)
   Menu "Firmy" (Administrator): dodaj firmę klienta - dostanie własny plan kont, faktury, kontrahentów i raporty.
   Aktywną firmę zmieniasz listą "Firma" w lewym menu (widoczna, gdy masz dostęp do więcej niż jednej firmy).

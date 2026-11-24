@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
-import { ACCOUNTANT, ADMIN, accessToken, login, loginOk, logout, confirmDialog } from './helpers'
+import { ACCOUNTANT, ADMIN, accessToken, login, loginOk, logout, confirmDialog, pickAccount } from './helpers'
 
 const today = () => {
   const d = new Date()
@@ -125,9 +125,9 @@ test.describe.serial('Kopie zapasowe, konto, załączniki, szablony, import wyci
     await loginOk(page, ADMIN)
     await page.goto('/transactions/new')
     await page.getByLabel('Opis').fill('Czynsz za biuro – miesiąc')
-    await page.getByLabel('Konto w wierszu 1').selectOption({ label: '402 Usługi obce' })
+    await pickAccount(page, 1, '402 Usługi obce')
     await page.getByLabel('Winien w wierszu 1').fill('1500')
-    await page.getByLabel('Konto w wierszu 2').selectOption({ label: '130 Rachunek bankowy' })
+    await pickAccount(page, 2, '130 Rachunek bankowy')
     await page.getByLabel('Ma w wierszu 2').fill('1500')
     await page.getByLabel('Nazwa szablonu').fill('Czynsz')
     await page.getByRole('button', { name: 'Zapisz szablon' }).click()

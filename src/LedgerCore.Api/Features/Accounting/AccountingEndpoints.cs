@@ -2,6 +2,7 @@ using Carter;
 using LedgerCore.Api.Common.Extensions;
 using LedgerCore.Application.Features.Accounts.Commands.Create;
 using LedgerCore.Application.Features.Accounts.Commands.Update;
+using LedgerCore.Application.Features.Accounts.Queries.Balances;
 using LedgerCore.Application.Features.Accounts.Queries.List;
 using LedgerCore.Application.Features.Reports;
 using LedgerCore.Application.Features.Transactions.Commands.Create;
@@ -13,6 +14,7 @@ namespace LedgerCore.Api.Features.Accounting
 {
     public record UpdateAccountBody(string Name, bool IsActive);
     public record ReverseBody(DateTime? Date);
+    public record BalancesBody(List<Guid>? AccountIds);
 
     public class AccountingEndpoints : ICarterModule
     {
@@ -28,6 +30,8 @@ namespace LedgerCore.Api.Features.Accounting
                 await s.Send(new UpdateAccount.Command(id, b.Name, b.IsActive), ct);
                 return Results.NoContent();
             }).RequireAuthorization(Policies.CanWrite);
+            accounts.MapPost("balances", async (BalancesBody b, ISender s, CancellationToken ct) =>
+                Results.Ok(await s.Send(new AccountBalances.Query(b.AccountIds ?? []), ct)));
             accounts.MapGet("{id:guid}/ledger", async (Guid id, DateTime? from, DateTime? to, int? page, int? pageSize, ISender s, CancellationToken ct) =>
                 Results.Ok(await s.Send(new AccountLedger.Query(id, from, to, page, pageSize ?? 50), ct)));
 

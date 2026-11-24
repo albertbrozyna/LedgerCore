@@ -34,7 +34,7 @@ export async function postTransaction(
   while ((await page.locator('table.lines tbody tr').count()) < lines.length)
     await page.getByRole('button', { name: '+ Dodaj wiersz' }).click()
   for (const [i, l] of lines.entries()) {
-    await page.getByLabel(`Konto w wierszu ${i + 1}`).selectOption({ label: l.account })
+    await pickAccount(page, i + 1, l.account)
     if (l.debit) await page.getByLabel(`Winien w wierszu ${i + 1}`).fill(l.debit)
     if (l.credit) await page.getByLabel(`Ma w wierszu ${i + 1}`).fill(l.credit)
   }
@@ -63,4 +63,12 @@ export async function answerPrompt(page: Page, value: string) {
   await dialog.locator('input').fill(value)
   await dialog.getByRole('button', { name: 'Zapisz' }).click()
   await expect(dialog).toBeHidden()
+}
+
+/** Wybiera konto w wierszu księgowania (pole z autouzupełnianiem – zamiennik dawnej listy `select`). */
+export async function pickAccount(page: Page, row: number, label: string) {
+  const box = page.getByRole('combobox', { name: `Konto w wierszu ${row}` })
+  await box.fill(label)
+  await page.getByRole('option', { name: label, exact: true }).click()
+  await expect(box).toHaveValue(label)
 }

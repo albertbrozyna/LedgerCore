@@ -59,3 +59,5 @@ Legenda: ✅ zrobione · ⬜ później · ⛔ zablokowane zewnętrznie
 - ✅ Design system: tokeny, ciemny motyw, komponenty bazowe, modale zamiast okien przeglądarki, nawigacja grupowana
 - ✅ Raporty i pulpit liczone w SQL (200 000 zapisów: pulpit ~0,3 s), karta konta ze stronicowaniem
 - ✅ Tabele: sortowanie po stronie serwera, filtry, wybór kolumn, zapisane widoki, eksport widoku CSV, audyt dostępności (axe)
+- ✅ Globalna wyszukiwarka i paleta poleceń (Ctrl+K), skróty klawiaturowe z pomocą (N, F, ?, Alt+↑/↓)
+- ✅ Szybkie księgowanie z klawiatury: autouzupełnianie kont, Ctrl+Enter, podgląd sald, „Kopiuj jako nowe”

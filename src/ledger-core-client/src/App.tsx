@@ -7,7 +7,8 @@ import { Badge, Button, DialogProvider, Loading, ToastProvider, themeLabel, useT
 import { SetupPage, LoginPage } from './pages/AuthPages'
 import { DashboardPage } from './pages/Dashboard'
 import { AccountsPage } from './pages/Accounts'
-import { JournalPage, NewTransactionPage, TransactionPage } from './pages/Transactions'
+import { JournalPage, TransactionPage } from './pages/Transactions'
+import { NewTransactionPage } from './pages/NewTransaction'
 import { LedgerPage, ReportsPage } from './pages/Reports'
 import { UsersPage } from './pages/Users'
 import { ContractorsPage } from './pages/Contractors'
@@ -19,6 +20,8 @@ import { MyAccountPage } from './pages/MyAccount'
 import { BankImportPage } from './pages/BankImport'
 import { InvoicePrintPage } from './pages/InvoicePrint'
 import { DesignCatalogPage } from './pages/DesignCatalog'
+import { CommandPalette, ShortcutHelp } from './CommandPalette'
+import { useGlobalShortcuts } from './shortcuts'
 
 const navGroups: { title: string; adminOnly?: boolean; items: { to: string; label: string; end?: boolean }[] }[] = [
   { title: 'Księga', items: [
@@ -49,9 +52,22 @@ function PeriodBadge() {
 }
 
 function Shell({ children }: { children: ReactNode }) {
-  const { user, logout, isAdmin, companies, company, switchCompany } = useAuth()
+  const { user, logout, isAdmin, canWrite, companies, company, switchCompany } = useAuth()
   const { theme, cycle } = useTheme()
   const nav = useNavigate()
+  const [palette, setPalette] = useState(false)
+  const [help, setHelp] = useState(false)
+  useGlobalShortcuts({
+    onPalette: () => setPalette(p => !p),
+    onHelp: () => setHelp(true),
+    onNewTransaction: canWrite ? () => nav('/transactions/new') : undefined,
+    onNewInvoice: canWrite ? () => nav('/invoices/new?type=Sales') : undefined,
+    onCompanyStep: d => {
+      if (companies.length < 2) return
+      const i = companies.findIndex(c => c.id === company?.id)
+      switchCompany(companies[(i + d + companies.length) % companies.length].id)
+    },
+  })
   const [collapsed, setCollapsed] = useState(readCollapsed)
   const toggle = () => setCollapsed(c => { try { localStorage.setItem(KEY_COLLAPSED, c ? '0' : '1') } catch { /* tryb prywatny */ } return !c })
   return (
@@ -93,10 +109,14 @@ function Shell({ children }: { children: ReactNode }) {
           )}
           <PeriodBadge />
           <span className="grow-space" />
+          <Button small onClick={() => setPalette(true)}>Wyszukiwarka <kbd>Ctrl+K</kbd></Button>
+          <Button small onClick={() => setHelp(true)} aria-label="Skróty klawiaturowe">?</Button>
           <Button small onClick={cycle} aria-label={themeLabel[theme]}>{theme === 'dark' ? '☾ Ciemny' : theme === 'light' ? '☀ Jasny' : '◐ Auto'}</Button>
         </header>
         <main className="content">{children}</main>
       </div>
+      {palette && <CommandPalette onClose={() => setPalette(false)} onHelp={() => setHelp(true)} />}
+      {help && <ShortcutHelp onClose={() => setHelp(false)} />}
     </div>
   )
 }

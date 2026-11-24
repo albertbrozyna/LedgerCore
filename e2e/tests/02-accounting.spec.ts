@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { ADMIN, loginOk, postTransaction, squash, confirmDialog } from './helpers'
+import { ADMIN, loginOk, postTransaction, squash, confirmDialog, pickAccount } from './helpers'
 
 const today = new Date().toISOString().slice(0, 10)
 
@@ -30,9 +30,9 @@ test.describe.serial('Księgowość: plan kont, księgowania, raporty', () => {
   test('niezbilansowane księgowanie nie może zostać zapisane', async ({ page }) => {
     await page.goto('/transactions/new')
     await page.getByLabel('Opis').fill('Niezbilansowane')
-    await page.getByLabel('Konto w wierszu 1').selectOption({ label: '130 Rachunek bankowy' })
+    await pickAccount(page, 1, '130 Rachunek bankowy')
     await page.getByLabel('Winien w wierszu 1').fill('100')
-    await page.getByLabel('Konto w wierszu 2').selectOption({ label: '700 Przychody ze sprzedaży usług' })
+    await pickAccount(page, 2, '700 Przychody ze sprzedaży usług')
     await page.getByLabel('Ma w wierszu 2').fill('90,50')
     await expect(page.getByTestId('balance-status')).toContainText('Różnica')
     await expect(page.getByRole('button', { name: 'Zaksięguj' })).toBeDisabled()
