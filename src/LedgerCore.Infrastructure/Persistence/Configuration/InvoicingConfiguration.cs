@@ -38,6 +38,11 @@ namespace LedgerCore.Infrastructure.Persistence.Configuration
             b.Metadata.FindNavigation(nameof(Invoice.Payments))!.SetPropertyAccessMode(PropertyAccessMode.Field);
             b.HasIndex(i => new { i.CompanyId, i.Type, i.Number, i.ContractorId }).IsUnique();
             b.HasIndex(i => i.IssueDate);
+            // numer faktury sprzedaży jest unikalny w firmie (zakupy mogą powtarzać numer u różnych dostawców)
+            b.HasIndex(i => new { i.CompanyId, i.Number }).IsUnique().HasDatabaseName("IX_Invoices_Company_SalesNumber").HasFilter("\"Type\" = 0");
+            // jeden okres szablonu cyklicznego = jedna faktura
+            b.HasIndex(i => new { i.CompanyId, i.RecurringInvoiceId, i.RecurringPeriod }).IsUnique().HasDatabaseName("IX_Invoices_Company_RecurringPeriod")
+                .HasFilter("\"RecurringInvoiceId\" IS NOT NULL");
         }
     }
 

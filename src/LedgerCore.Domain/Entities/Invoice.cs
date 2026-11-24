@@ -86,6 +86,10 @@ public class Invoice : ICompanyOwned
     public KpirKind? KpirKind { get; private set; }
     /// <summary>Stawka ryczałtu w % (tylko sprzedaż w firmach na ryczałcie).</summary>
     public decimal? RyczaltRate { get; private set; }
+    /// <summary>Szablon faktury cyklicznej, z którego wygenerowano fakturę (null dla zwykłych faktur).</summary>
+    public Guid? RecurringInvoiceId { get; private set; }
+    /// <summary>Data okresu szablonu, za który wygenerowano fakturę – razem z szablonem unikalna (ochrona przed duplikatami).</summary>
+    public DateTime? RecurringPeriod { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public Guid? CreatedByUserId { get; private set; }
 
@@ -112,6 +116,12 @@ public class Invoice : ICompanyOwned
         foreach (var l in lines) _lines.Add(new InvoiceLine(Id, l.Description, l.Net, l.Rate, correctedInvoiceId != null));
         if (_lines.Count == 0) throw new DomainValidationException("Faktura wymaga co najmniej jednej pozycji");
         Net = _lines.Sum(l => l.Net); Vat = _lines.Sum(l => l.Vat); Gross = Net + Vat;
+    }
+
+    public void MarkRecurring(Guid recurringInvoiceId, DateTime period)
+    {
+        RecurringInvoiceId = recurringInvoiceId;
+        RecurringPeriod = period.Date;
     }
 
     public void LinkTransaction(Guid transactionId) => TransactionId = transactionId;

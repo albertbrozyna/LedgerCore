@@ -10,7 +10,8 @@ Bez serwera bazy danych i bez Dockera – wszystko w jednej aplikacji: .NET 10 (
 - **Storno** zamiast usuwania – dziennik jest niemodyfikowalny
 - **Karta konta** z saldem narastającym, **zestawienie obrotów i sald**, **rachunek wyników**, **bilans**, pulpit
 - **Kontrahenci** z walidacją NIP (suma kontrolna, unikalność) i saldami należności/zobowiązań
-- **Faktury sprzedaży i zakupu**: stawki 23/8/5/0/zw., numeracja `FV/rok/0001`, automatyczne księgowanie (201/202, 220 VAT), płatności częściowe i pełne, anulowanie ze stornem
+- **Faktury sprzedaży i zakupu**: stawki 23/8/5/0/zw., numeracja domyślnie `FV/rok/0001` (wzór i zerowanie numeracji ustawiane per firma), automatyczne księgowanie (201/202, 220 VAT), płatności częściowe i pełne, anulowanie ze stornem
+- **Faktury cykliczne** (abonamenty): szablony z częstotliwością, generowanie zaległych faktur jednym przyciskiem (bez duplikatów) lub opcjonalnie przy starcie aplikacji
 - **Wiele firm (klientów biura)** w jednej instalacji: odizolowane dane, przełącznik firmy, dostęp użytkowników do wybranych firm
 - **Faktury korygujące** (in minus / in plus, zmiana stawki VAT) z księgowaniem ze znakiem, wpływem na VAT i rozrachunki
 - **Rejestry VAT** (sprzedaży i zakupów) oraz rozliczenie VAT należny − naliczony

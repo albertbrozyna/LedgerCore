@@ -168,3 +168,21 @@ export interface MailSettingsDto {
   reminderSubject: string; reminderBody: string; interestSubject: string; interestBody: string
 }
 export interface InterestRateDto { id: string; validFrom: string; annualPercent: number; note?: string | null }
+
+export type RecurrenceFrequency = 'Monthly' | 'Quarterly' | 'Yearly'
+export type NumberReset = 'Yearly' | 'Monthly' | 'Never'
+export interface RecurringItem {
+  id: string; name: string; contractorId: string; contractorName: string; frequency: RecurrenceFrequency
+  dayOfMonth: number; dueDays: number; nextDate: string; endDate?: string | null; isActive: boolean
+  resultAccountId?: string | null; kind?: KpirKind | null; ryczaltRate?: number | null; notes?: string | null
+  net: number; gross: number; generatedCount: number; lines: InvoiceLineInput[]
+}
+export interface RecurringInput {
+  name: string; contractorId: string; frequency: RecurrenceFrequency; dayOfMonth: number; dueDays: number; nextDate: string
+  endDate?: string | null; resultAccountId?: string | null; kind?: KpirKind | null; ryczaltRate?: number | null; notes?: string | null; lines: InvoiceLineInput[]
+}
+export interface RecurringGenerateResult {
+  generated: { template: string; number: string; issueDate: string; gross: number }[]
+  skipped: { template: string; date: string; reason: string }[]
+}
+export interface NumberingDto { pattern: string; reset: NumberReset; nextExample: string }

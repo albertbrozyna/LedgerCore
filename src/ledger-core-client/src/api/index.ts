@@ -4,6 +4,7 @@ import { adminApi } from './admin'
 import { collectionsApi } from './collections'
 import { companiesApi } from './companies'
 import { invoicingApi } from './invoicing'
+import { recurringApi } from './recurring'
 import { registersApi } from './registers'
 import { reportsApi } from './reports'
 import { searchApi } from './search'
@@ -17,6 +18,7 @@ export const api = {
   ...searchApi,
   ...registersApi,
   ...collectionsApi,
+  ...recurringApi,
 }
 
 export { ApiError, companyStore, setUnauthorizedHandler, tokens } from './http'

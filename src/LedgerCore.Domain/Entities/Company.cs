@@ -27,7 +27,20 @@ public class Company
     /// <summary>Sposób prowadzenia ewidencji (domyślnie pełna księgowość – tak migrowane są istniejące firmy).</summary>
     public AccountingMode AccountingMode { get; private set; } = AccountingMode.FullBooks;
 
+    /// <summary>Wzór numeru faktur sprzedaży, np. FV/{RRRR}/{NNNN} (zob. <see cref="NumberPattern"/>).</summary>
+    public string SalesNumberPattern { get; private set; } = NumberPattern.Default;
+    public NumberReset SalesNumberReset { get; private set; } = NumberReset.Yearly;
+
     private Company() { }
+
+    public void SetNumbering(string pattern, NumberReset reset)
+    {
+        var p = NumberPattern.Parse(pattern, reset); // rzuca z komunikatem po polsku
+        SalesNumberPattern = p.Text;
+        SalesNumberReset = reset;
+    }
+
+    public NumberPattern Numbering => NumberPattern.Parse(SalesNumberPattern, SalesNumberReset);
 
     public Company(string name)
     {

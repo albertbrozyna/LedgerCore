@@ -274,6 +274,16 @@ namespace LedgerCore.Infrastructure.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("SalesNumberPattern")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("FV/{RRRR}/{NNNN}");
+
+                    b.Property<int>("SalesNumberReset")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.ToTable("companies");
@@ -403,6 +413,12 @@ namespace LedgerCore.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("RecurringInvoiceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("RecurringPeriod")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("ResultAccountId")
                         .HasColumnType("TEXT");
 
@@ -432,6 +448,16 @@ namespace LedgerCore.Infrastructure.Migrations
                     b.HasIndex("CorrectedInvoiceId");
 
                     b.HasIndex("IssueDate");
+
+                    b.HasIndex("CompanyId", "Number")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Invoices_Company_SalesNumber")
+                        .HasFilter("\"Type\" = 0");
+
+                    b.HasIndex("CompanyId", "RecurringInvoiceId", "RecurringPeriod")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Invoices_Company_RecurringPeriod")
+                        .HasFilter("\"RecurringInvoiceId\" IS NOT NULL");
 
                     b.HasIndex("CompanyId", "Type", "Number", "ContractorId")
                         .IsUnique();
@@ -645,6 +671,102 @@ namespace LedgerCore.Infrastructure.Migrations
                     b.HasIndex("CompanyId");
 
                     b.ToTable("periodlocks");
+                });
+
+            modelBuilder.Entity("LedgerCore.Domain.Entities.RecurringInvoice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ContractorId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DayOfMonth")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DueDays")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Frequency")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("KpirKind")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("NextDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ResultAccountId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("RyczaltRate")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("ContractorId");
+
+                    b.HasIndex("CompanyId", "IsActive", "NextDate");
+
+                    b.ToTable("recurringinvoices");
+                });
+
+            modelBuilder.Entity("LedgerCore.Domain.Entities.RecurringInvoiceLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Net")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("RecurringInvoiceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("VatRate")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("RecurringInvoiceId");
+
+                    b.ToTable("recurringinvoicelines");
                 });
 
             modelBuilder.Entity("LedgerCore.Domain.Entities.RefreshToken", b =>
@@ -1087,6 +1209,26 @@ namespace LedgerCore.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("LedgerCore.Domain.Entities.RecurringInvoice", b =>
+                {
+                    b.HasOne("LedgerCore.Domain.Entities.Contractor", "Contractor")
+                        .WithMany()
+                        .HasForeignKey("ContractorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Contractor");
+                });
+
+            modelBuilder.Entity("LedgerCore.Domain.Entities.RecurringInvoiceLine", b =>
+                {
+                    b.HasOne("LedgerCore.Domain.Entities.RecurringInvoice", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("RecurringInvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("LedgerCore.Domain.Entities.RefreshToken", b =>
                 {
                     b.HasOne("LedgerCore.Domain.Entities.User", "User")
@@ -1170,6 +1312,11 @@ namespace LedgerCore.Infrastructure.Migrations
                     b.Navigation("Lines");
 
                     b.Navigation("Payments");
+                });
+
+            modelBuilder.Entity("LedgerCore.Domain.Entities.RecurringInvoice", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("LedgerCore.Domain.Entities.Transaction", b =>

@@ -44,6 +44,7 @@ builder.Services.AddCarter().AddPersistence(builder.Configuration).AddInfrastruc
 
 builder.Services.AddSingleton<LedgerCore.Api.Infrastructure.BackupManager>();
 builder.Services.AddHostedService<LedgerCore.Api.Infrastructure.BackupHostedService>();
+builder.Services.AddHostedService<LedgerCore.Api.Infrastructure.RecurringHostedService>();
 
 var app = builder.Build();
 

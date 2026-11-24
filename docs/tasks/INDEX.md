@@ -14,7 +14,7 @@ Wybieraj zadania od góry (priorytet), pod warunkiem że wszystkie zależności 
 | [T-006](T-006-szybkie-ksiegowanie.md) | Szybkie księgowanie sterowane klawiaturą | E7 UI/UX | P1 | M | T-003 | Zrobione |
 | [T-007](T-007-kpir-i-ryczalt.md) | Księga przychodów i rozchodów (KPiR) oraz ewidencja ryczałtu | E1 Rozliczenia PL | P1 | L | T-001 | Zrobione |
 | [T-009](T-009-wezwania-odsetki-email.md) | Wezwania do zapłaty, noty odsetkowe i wysyłka e-mail | E3 Sprzedaż i dokumenty | P1 | M | — | Zrobione |
-| [T-010](T-010-faktury-cykliczne-numeracja.md) | Faktury cykliczne i konfigurowalna numeracja | E3 Sprzedaż i dokumenty | P1 | M | — | Do zrobienia |
+| [T-010](T-010-faktury-cykliczne-numeracja.md) | Faktury cykliczne i konfigurowalna numeracja | E3 Sprzedaż i dokumenty | P1 | M | — | Zrobione |
 | [T-011](T-011-wyciagi-bankowe-i-uzgodnienie.md) | Wyciągi bankowe: więcej formatów, deduplikacja, reguły, uzgodnienie | E4 Bank | P1 | L | T-001 | Do zrobienia |
 | [T-012](T-012-zadania-i-terminy-klientow.md) | Zadania i terminy klientów (workflow biura) | E5 Praca biura | P1 | L | T-003 | Do zrobienia |
 | [T-015](T-015-ksef-fa3.md) | KSeF: generowanie faktur FA(3) i eksport | E1 Rozliczenia PL | P1 | L | T-001 | Zablokowane |

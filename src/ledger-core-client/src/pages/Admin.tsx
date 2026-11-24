@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth'
+import { NumberingSection } from './AdminNumbering'
 import { InterestRatesSection, MailSettingsSection } from './AdminCollections'
 import { accountingModeLabel } from '../format'
 import { api, type AccountingMode, type AuditItem, type CompanyDto } from '../api'
@@ -101,6 +102,8 @@ export function AdminPage() {
         </label>
         <Button disabled={newMode === mode} onClick={changeMode}>Zmień tryb</Button>
       </div>
+
+      <NumberingSection onError={setError} onNotice={setNotice} />
 
       <MailSettingsSection onError={setError} onNotice={setNotice} />
       <InterestRatesSection onError={setError} onNotice={setNotice} />

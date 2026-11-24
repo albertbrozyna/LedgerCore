@@ -39,6 +39,8 @@ public class LedgerDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     public DbSet<MailSettings> MailSettings { get; set; }
     public DbSet<CollectionNotice> CollectionNotices { get; set; }
     public DbSet<CollectionNoticeInvoice> CollectionNoticeInvoices { get; set; }
+    public DbSet<RecurringInvoice> RecurringInvoices { get; set; }
+    public DbSet<RecurringInvoiceLine> RecurringInvoiceLines { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -63,6 +65,7 @@ public class LedgerDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<Company>().Property(c => c.Phone).HasMaxLength(40);
         modelBuilder.Entity<Company>().Property(c => c.BankAccount).HasMaxLength(40);
         modelBuilder.Entity<Company>().Property(c => c.InvoiceFooter).HasMaxLength(500);
+        modelBuilder.Entity<Company>().Property(c => c.SalesNumberPattern).HasMaxLength(60).HasDefaultValue(NumberPattern.Default);
 
         // Izolacja danych firm: każde zapytanie o dane księgowe jest automatycznie ograniczone do bieżącej firmy.
         foreach (var type in modelBuilder.Model.GetEntityTypes().Select(t => t.ClrType).Where(t => typeof(ICompanyOwned).IsAssignableFrom(t)).ToList())

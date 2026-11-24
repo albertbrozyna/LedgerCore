@@ -51,6 +51,19 @@ WINDYKACJA (WEZWANIA DO ZAPŁATY I NOTY ODSETKOWE)
   2) "Poczta wychodząca (SMTP)" - serwer, port, login i hasło skrzynki, z której mają wychodzić wiadomości; użyj "Wyślij wiadomość testową".
      Hasło jest przechowywane zaszyfrowane. Po przeniesieniu programu na inny komputer wpisz je ponownie.
 
+FAKTURY CYKLICZNE (ABONAMENTY) I NUMERACJA FAKTUR
+  Menu "Abonamenty": szablon faktury sprzedaży (nabywca, pozycje, częstotliwość miesięczna / kwartalna / roczna, dzień wystawienia,
+  termin płatności w dniach, data następnej faktury, opcjonalnie data zakończenia). Przycisk "Wygeneruj zaległe" wystawia faktury za
+  wszystkie okresy do wskazanego dnia (data wystawienia = data z harmonogramu) i księguje je jak zwykłe faktury. Ponowne kliknięcie
+  nie tworzy duplikatów. Gdy okres jest zamknięty (blokada okresu) albo kontrahent nieaktywny, szablon jest pominięty z komunikatem
+  i czeka - pozostałe szablony generują się normalnie. Szablon można wstrzymać, edytować lub usunąć (wystawione faktury zostają).
+  Automatycznie przy starcie programu faktury cykliczne generują się tylko po włączeniu ustawienia RecurringInvoices:GenerateOnStartup
+  (domyślnie wyłączone, bo faktury powstają bez udziału człowieka; w audycie widnieją jako wykonane przez "system").
+  Wzór numeru faktur sprzedaży (Administrator, "Administracja" -> "Numeracja faktur sprzedaży"): znaczniki {RRRR} rok, {RR} rok
+  dwucyfrowy, {MM} miesiąc, {NNNN} numer kolejny (liczba liter N = minimalna liczba cyfr), np. FV/{RRRR}/{NNNN} albo {NNN}/{MM}/{RR}.
+  Numeracja może zaczynać się od nowa co rok, co miesiąc lub być ciągła; wzór musi na to pozwalać (np. zerowanie co rok wymaga roku
+  we wzorze), inaczej program go odrzuci. Zmiana wzoru nie zmienia już wystawionych faktur. Numer sprzedaży jest unikalny w firmie.
+
 KPIR I RYCZAŁT
   Przy dodawaniu firmy (menu "Firmy") wybierz "Tryb ewidencji": Pełna księgowość, KPiR albo Ryczałt. Firma w trybie
   KPiR/ryczałt nie ma planu kont, dziennika ani bilansu - faktury sprzedaży i zakupu trafiają wprost do ewidencji

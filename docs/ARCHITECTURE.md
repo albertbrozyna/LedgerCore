@@ -33,6 +33,8 @@ Domena nie zna EF ani HTTP. Handlery Application używają `IAppDbContext` (zaim
 - `Invoice` (sprzedaż/zakup), `InvoiceLine` (netto, stawka, VAT liczony per pozycja z zaokrągleniem), `Payment`.
 - Księgowanie automatyczne: sprzedaż Wn 201 brutto / Ma przychód netto + Ma 220 VAT; zakup odwrotnie na 202/koszt/220.
   Wymagane konta systemowe po kodzie: 201, 202, 220, 700, 402 (`SystemAccounts`).
+- Numeracja sprzedaży: wzór per firma (`Company.SalesNumberPattern/SalesNumberReset`, parser `NumberPattern` w domenie, `SalesNumbers.Next`); numer kolejny to maksimum istniejących numerów pasujących do wzoru w okresie numeracji + 1; unikalny indeks (CompanyId, Number) dla sprzedaży. Korekty mają osobny prefiks `KFV/rok/`.
+- Faktury cykliczne: `RecurringInvoice` (+ pozycje, `ICompanyOwned`), generator `RecurringInvoices.GenerateHandler` woła zwykłe `CreateInvoice` (te same księgowania, audyt, blokada okresu); duplikaty wyklucza unikalny indeks (CompanyId, RecurringInvoiceId, RecurringPeriod) na `Invoice`. Opcjonalna usługa tła `RecurringHostedService` (`RecurringInvoices:GenerateOnStartup`).
 - Korekty: `Invoice` z `CorrectedInvoiceId`, pozycje = różnice (mogą być ujemne), księgowane ze znakiem (`AddSigned`),
   `CorrectedAmount` na fakturze korygowanej zmienia `Remaining`. Korekta sama nie podlega płatności.
 - Faktury i płatności mają własne księgowania – `ReverseTransaction` je odrzuca (anulowanie przez `CancelInvoice`).

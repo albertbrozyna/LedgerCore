@@ -22,6 +22,7 @@ import { InvoicePrintPage } from './pages/InvoicePrint'
 import { DesignCatalogPage } from './pages/DesignCatalog'
 import { CommandPalette, ShortcutHelp } from './CommandPalette'
 import { RegisterPage } from './pages/Register'
+import { RecurringPage } from './pages/Recurring'
 import { CollectionsPage, ContractorCollectionsPage, NoticePage } from './pages/Collections'
 import { useGlobalShortcuts } from './shortcuts'
 
@@ -31,7 +32,7 @@ const navGroups: { title: string; adminOnly?: boolean; items: NavItem[] }[] = [
     { to: '/register', label: 'Ewidencja', register: true },
     { to: '/transactions', label: 'Dziennik', end: true, full: true }, { to: '/transactions/new', label: 'Nowe księgowanie', full: true },
     { to: '/bank-import', label: 'Import wyciągu', full: true }, { to: '/accounts', label: 'Plan kont', full: true } ] },
-  { title: 'Sprzedaż i zakupy', items: [{ to: '/invoices', label: 'Faktury' }, { to: '/contractors', label: 'Kontrahenci' }, { to: '/collections', label: 'Windykacja' }] },
+  { title: 'Sprzedaż i zakupy', items: [{ to: '/invoices', label: 'Faktury' }, { to: '/contractors', label: 'Kontrahenci' }, { to: '/recurring', label: 'Abonamenty' }, { to: '/collections', label: 'Windykacja' }] },
   { title: 'Zestawienia', items: [{ to: '/reports', label: 'Raporty' }] },
   { title: 'Zarządzanie', adminOnly: true, items: [
     { to: '/companies', label: 'Firmy' }, { to: '/users', label: 'Użytkownicy' }, { to: '/admin', label: 'Administracja' } ] },
@@ -183,6 +184,7 @@ export default function App() {
           <Route path="/invoices/:id/correction" element={<Protected><CorrectionPage /></Protected>} />
           <Route path="/admin" element={<Protected><AdminOnly><AdminPage /></AdminOnly></Protected>} />
           <Route path="/register" element={<Protected><RegisterOnly><RegisterPage /></RegisterOnly></Protected>} />
+          <Route path="/recurring" element={<Protected><RecurringPage /></Protected>} />
           <Route path="/collections" element={<Protected><CollectionsPage /></Protected>} />
           <Route path="/collections/notices/:id" element={<Protected><NoticePage /></Protected>} />
           <Route path="/collections/:contractorId" element={<Protected><ContractorCollectionsPage /></Protected>} />

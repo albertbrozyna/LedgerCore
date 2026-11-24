@@ -31,7 +31,7 @@ public static class CreateInvoice
 
     public record Command(InvoiceType Type, string? Number, Guid ContractorId, DateTime IssueDate, DateTime? SaleDate,
         DateTime DueDate, Guid? ResultAccountId, string? Notes, List<LineDto> Lines,
-        KpirKind? Kind = null, decimal? RyczaltRate = null) : IRequest<Result>;
+        KpirKind? Kind = null, decimal? RyczaltRate = null, Guid? RecurringInvoiceId = null, DateTime? RecurringPeriod = null) : IRequest<Result>;
 
     public record Result(Guid InvoiceId, string Number, Guid TransactionId);
 
@@ -79,7 +79,7 @@ public static class CreateInvoice
                 throw new DomainValidationException("Faktura zakupu musi być księgowana na konto kosztów (lub aktywów)");
 
             string number;
-            if (sales) number = await NextSalesNumber(db, r.IssueDate, ct);
+            if (sales) number = await SalesNumbers.Next(db, r.IssueDate, ct);
             else
             {
                 number = r.Number?.Trim() ?? "";
@@ -111,6 +111,7 @@ public static class CreateInvoice
             }
             tx.Validate();
             invoice.LinkTransaction(tx.Id);
+            if (r.RecurringInvoiceId is { } rid && r.RecurringPeriod is { } rp) invoice.MarkRecurring(rid, rp);
 
             db.Transactions.Add(tx);
             db.Invoices.Add(invoice);
@@ -125,7 +126,7 @@ public static class CreateInvoice
             var sales = r.Type == InvoiceType.Sales;
             var (kind, rate) = RegisterRules.Classify(mode, r.Type, r.Kind, r.RyczaltRate);
             string number;
-            if (sales) number = await NextSalesNumber(db, r.IssueDate, ct);
+            if (sales) number = await SalesNumbers.Next(db, r.IssueDate, ct);
             else
             {
                 number = r.Number?.Trim() ?? "";
@@ -136,19 +137,11 @@ public static class CreateInvoice
             var invoice = new Invoice(r.Type, number, r.ContractorId, r.IssueDate, r.SaleDate ?? r.IssueDate, r.DueDate,
                 Guid.Empty, r.Notes, me.User?.Id, r.Lines.Select(l => (l.Description, l.Net, l.VatRate)));
             invoice.SetTaxClassification(kind, rate);
+            if (r.RecurringInvoiceId is { } rid && r.RecurringPeriod is { } rp) invoice.MarkRecurring(rid, rp);
             db.Invoices.Add(invoice);
             await audit.Add("Faktura", $"Zarejestrowano fakturę {invoice.Number} ({(sales ? "sprzedaży" : "zakupu")}) w ewidencji {(mode == AccountingMode.Kpir ? "KPiR" : "ryczałtu")}, netto {invoice.Net:0.00}", ct);
             await db.SaveChangesAsync(ct);
             return new Result(invoice.Id, invoice.Number, Guid.Empty);
-        }
-
-        static async Task<string> NextSalesNumber(IAppDbContext db, DateTime date, CancellationToken ct)
-        {
-            var prefix = $"FV/{date.Year}/";
-            var nums = await db.Invoices.AsNoTracking().Where(i => i.Type == InvoiceType.Sales && i.Number.StartsWith(prefix))
-                .Select(i => i.Number).ToListAsync(ct);
-            var max = nums.Select(n => int.TryParse(n[prefix.Length..], out var v) ? v : 0).DefaultIfEmpty(0).Max();
-            return $"{prefix}{max + 1:0000}";
         }
     }
 }
